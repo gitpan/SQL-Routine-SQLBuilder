@@ -1,0 +1,10 @@
+ChangeLog
+INSTALL
+lib/SQL/Routine/SQLBuilder.pm
+LICENSE
+Makefile.PL
+MANIFEST
+META.yml                                 Module meta-data (added by MakeMaker)
+ReadMe
+t/SQL_Routine_SQLBuilder.t
+TODO
