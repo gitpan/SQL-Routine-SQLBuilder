@@ -1,12 +1,11 @@
 #!perl
-
 use 5.008001; use utf8; use strict; use warnings;
 
 package SQL::Routine::SQLBuilder;
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
-use Locale::KeyedText '1.02';
-use SQL::Routine '0.56';
+use Locale::KeyedText 1.03;
+use SQL::Routine 0.58;
 
 ######################################################################
 
@@ -24,8 +23,8 @@ Core Modules: I<none>
 
 Non-Core Modules: 
 
-	Locale::KeyedText 1.02 (for error messages)
-	SQL::Routine 0.56
+	Locale::KeyedText 1.03 (for error messages)
+	SQL::Routine 0.58
 
 =head1 COPYRIGHT AND LICENSE
 
@@ -2049,44 +2048,14 @@ __END__
 
 =head1 SYNOPSIS
 
-	use SQL::Routine::SQLBuilder; # also loads SQL::Routine
-	use DBI;
-
-	my $model = SQL::Routine->new_container();
-
-	# ... Probably around this time you would stuff $model full of nodes that 
-	# describe the schema or action concepts you want to derive SQL from.
-	# In this case, define a table, and a command to create it, and a routine 
-	# to select from it; the command and routine nodes each have an id of 1.
-
-	my $builder = SQL::Routine::SQLBuilder->new();
-
-	my $dbh = DBI->connect( 'driver:db', 'user', 'pass' );
-
-	my $cr_tbl_cmd_node = $model->get_node( 1 ); # TABLE_CREATE cmd def earlier
-	my $create_sql = $builder->build_sql_routine( $cr_tbl_cmd_node ); # OUT OF DATE ?
-
-	my $sth1 = $dbh->prepare( $create_sql );
-	my $rv1 = $sth1->execute(); # creates a table in the database
-
-	my %named_arg_values = ( 'foo' => 'abc', 'bar' => 7 ); # to use in select where clause
-
-	my $select_from_tbl_rtn_node = $model->get_node( 1 );
-	my ($select_sql, $arg_map) = $builder->build_sql_routine( $select_from_tbl_rtn_node );
-	my @ordered_arg_values = map { $named_arg_values{$_} } @{$arg_map};
-
-	my $sth2 = $dbh->prepare( $select_sql );
-	my $rv2 = $sth2->execute( @ordered_arg_values ); # opens a select cursor/query
-	my $rowset = $sth2->fetchall_arrayref({});  # get array of hashes
-
-	$dbh->close();
+I<The previous SYNOPSIS was removed; a new one will be written later.>
 
 =head1 DESCRIPTION
 
-This module is a reference implementation of fundamental Rosetta features.
+This module is a reference implementation of fundamental SQL::Routine features.
 
 The SQL::Routine::SQLBuilder Perl 5 module is a functional but quickly
-built Rosetta utility class that converts a set of related SQL::Routine
+built SQL::Routine utility class that converts a set of related SQL::Routine
 Nodes into one or more SQL strings that are ready to give as input to a
 particular SQL relational database management system.  This class will by
 default produce SQL that is compliant with the ANSI/ISO SQL:2003 (or 1999 or
@@ -2117,7 +2086,9 @@ since DBI's arguments are positional and SQL::Routine's are named, this
 class will also return a map for the SQL that says what order to give the named
 values to DBI.
 
-I<CAVEAT: SIGNIFICANT PORTIONS OF THIS MODULE ARE NOT WRITTEN YET.>
+I<CAVEAT: SIGNIFICANT PORTIONS OF THIS MODULE ARE NOT WRITTEN YET.  MOREOVER, NO
+PART OF THIS MODULE HAS BEEN EXECUTED YET AND IT PROBABLY CONTAINS MANY ERRORS. 
+ALL THAT IS KNOWN FOR SURE IS THAT THIS MODULE COMPILES.>
 
 =head1 CONSTRUCTOR FUNCTIONS AND METHODS
 

@@ -1,30 +1,17 @@
 #!perl
-
 use 5.008001; use utf8; use strict; use warnings;
 
-BEGIN { $| = 1; print "1..1\n"; }
+use Test::More 0.47;
+
+plan( 'tests' => 1 );
 
 ######################################################################
 # First ensure the modules to test will compile, are correct versions:
 
-use SQL::Routine::SQLBuilder '0.16';
+use SQL::Routine::SQLBuilder 0.17;
 
 ######################################################################
 # Here are some utility methods:
-
-# Set this to 1 to see complete result text for each test
-my $verbose = shift( @ARGV ) ? 1 : 0;  # set from command line
-
-my $test_num = 0;
-
-sub result {
-	my ($worked, $detail) = @_;
-	$test_num++;
-	$verbose or 
-		$detail = substr( $detail, 0, 50 ).
-		(length( $detail ) > 47 ? "..." : "");
-	print "@{[$worked ? '' : 'not ']}ok $test_num $detail\n";
-}
 
 sub message {
 	my ($detail) = @_;
@@ -33,32 +20,33 @@ sub message {
 
 sub error_to_string {
 	my ($message) = @_;
-	ref($message) or return $message; # if this isn't an object
-	my $translator = Locale::KeyedText->new_translator( 
-		['Rosetta::L::', 'SQL::Routine::L::'], ['en'] );
-	my $user_text = $translator->translate_message( $message );
-	unless( $user_text ) {
-		return "internal error: can't find user text for a message: ".
-			$message->as_string()." ".$translator->as_string();
+	if( ref($message) and UNIVERSAL::isa( $message, 'Locale::KeyedText::Message' ) ) {
+		my $translator = Locale::KeyedText->new_translator( ['SQL::Routine::L::'], ['en'] );
+		my $user_text = $translator->translate_message( $message );
+		unless( $user_text ) {
+			return 'internal error: can\'t find user text for a message: '.
+				$message->as_string().' '.$translator->as_string();
+		}
+		return $user_text;
 	}
-	return $user_text;
+	return $message; # if this isn't the right kind of object
 }
 
 ######################################################################
 # Now perform the actual tests:
 
-message( "START TESTING SQL::Routine::SQLBuilder" );
+message( 'START TESTING SQL::Routine::SQLBuilder' );
 
 ######################################################################
 
 eval {
-	result( 1, "all modules compiled" );
+	pass( "all modules compiled" );
 };
-$@ and result( 0, "TESTS ABORTED: ".error_to_string( $@ ) );
+$@ and fail( "TESTS ABORTED: ".error_to_string( $@ ) );
 
 ######################################################################
 
-message( "DONE TESTING SQL::Routine::SQLBuilder" );
+message( 'DONE TESTING SQL::Routine::SQLBuilder' );
 
 ######################################################################
 

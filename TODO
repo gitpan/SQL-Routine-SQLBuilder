@@ -1,11 +1,6 @@
 * Update the list of 'standard routines' in SQLBuilder (and SQL::Routine) to
 more closely reflect the SQL:2003 standard, fill other gaps.
 
-* Create a branch of this distribution that is written in Perl 6 but matches
-this mainline distribution feature-wise.  This fork will initially have a
-dependency in Autrijus Tang's "Pugs" distribution, which will be the runtime
-engine that it runs under; later it will run under the "Parrot" engine.
-
 * Any further improvements will be implemented over time as they are needed. 
 See the separately released "Rosetta-Engine-Generic" distribution for a clue as
 it is the initial main dependent of the SQL::Routine::SQLBuilder.

@@ -1,3 +1,31 @@
+2005-04-03   Darren Duncan <perl@DarrenDuncan.net>
+
+	* SQL-Routine-SQLBuilder Release 0.17.
+
+	* New code file versions are: SQLBuilder.pm v0.17.
+
+	* Updated external dependencies on Locale::KeyedText to v1.03 and on
+	SQL::Routine to v0.58.
+
+	* Added new external dependency on Test::More v0.47 (bundled with Perl
+	5.8.x); this distribution's test suite has been re-factored to use it rather
+	than rolling its own equivalent functionality, which is more in line with
+	CPAN best practices.  The new dependency does not extend to this
+	distribution's core modules (everything in /lib), which do not use it.
+
+	* Updated every 'use' statement in this distribution so that the module
+	version is formatted as a number rather than a string; this fixes a problem
+	where Perl was not asserting that the installed modules were new enough.
+
+	* Deleted the SYNOPSIS content in SQLBuilder.pm, leaving a promise of
+	something better to come.  Small DESCRIPTION updates also.
+
+	* Removed the section in the TODO file about a branch to Perl 6.
+
+	* NOTICE: This release v0.17 is the last one to contain detailed ChangeLog
+	entries for releases v0.01 thru v0.17; release v0.18 will truncate the
+	ChangeLog so it only shows details for v0.18 and later.
+
 2005-03-19   Darren Duncan <perl@DarrenDuncan.net>
 
 	* SQL-Routine-SQLBuilder Release 0.16.
