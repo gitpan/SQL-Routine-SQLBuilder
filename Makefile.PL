@@ -8,8 +8,8 @@ WriteMakefile(
 	'VERSION_FROM' => 'lib/SQL/Routine/SQLBuilder.pm', # finds $VERSION
 	'PREREQ_PM' => {
 		'Test::More' => '0.47', # but only for the test suite
-		'Locale::KeyedText' => '1.03',
-		'SQL::Routine' => '0.58',
+		'Locale::KeyedText' => '1.04',
+		'SQL::Routine' => '0.62',
 	},
 );
 

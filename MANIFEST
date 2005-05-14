@@ -1,10 +1,13 @@
-ChangeLog
+Changes
+GPL
 INSTALL
 lib/SQL/Routine/SQLBuilder.pm
-LICENSE
 Makefile.PL
 MANIFEST
 META.yml                                 Module meta-data (added by MakeMaker)
 ReadMe
-t/SQL_Routine_SQLBuilder.t
+t/lib/t_SRT_SB_Model.pm
+t/lib/t_SRT_SB_Util.pm
+t/SRT_SB_00_Compile.t
+t/SRT_SB_10_Generic.t
 TODO
