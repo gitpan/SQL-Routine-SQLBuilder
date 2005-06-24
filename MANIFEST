@@ -2,6 +2,7 @@ Changes
 GPL
 INSTALL
 lib/SQL/Routine/SQLBuilder.pm
+lib/SQL/Routine/SQLBuilder/L/en.pm
 Makefile.PL
 MANIFEST
 META.yml                                 Module meta-data (added by MakeMaker)

@@ -1,4 +1,4 @@
-     REFERENCE SQL ROUTINE SQL:2003 STRING BUILDER IMPLEMENTATION
+                       SQL-Routine-SQLBuilder
 ----------------------------------------------------------------------
 
 by Darren Duncan <perl@DarrenDuncan.net>
@@ -45,8 +45,8 @@ Core Modules:
 
 Non-Core Modules: 
 
-	Locale::KeyedText 1.04 (for error messages)
-	SQL::Routine 0.62
+	Locale::KeyedText 1.05 (for error messages)
+	SQL::Routine 0.65
 
 This module doesn't require anything else.
 
@@ -76,8 +76,8 @@ it under the terms of the GNU General Public License (GPL) as published by the
 Free Software Foundation (http://www.fsf.org/); either version 2 of the License,
 or (at your option) any later version.  You should have received a copy of the
 GPL as part of the SQL::Routine::SQLBuilder distribution, in the file named
-"GPL"; if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-Suite 330, Boston, MA 02111-1307 USA.
+"GPL"; if not, write to the Free Software Foundation, Inc., 51 Franklin St,
+Fifth Floor, Boston, MA  02110-1301, USA.
 
 Linking SQL::Routine::SQLBuilder statically or dynamically with other modules is
 making a combined work based on SQL::Routine::SQLBuilder.  Thus, the terms and

@@ -1,3 +1,120 @@
+2005-06-23   Darren Duncan <perl@DarrenDuncan.net>
+
+	* SQL-Routine-SQLBuilder Release 0.19.
+
+	* New code file versions are: SQLBuilder.pm v0.19 and en.pm v0.01 (this
+	second file is new; details concerning it are below).
+
+	* Updated external dependencies on Locale::KeyedText to v1.05 and on
+	SQL::Routine to v0.65.
+
+	* This release has a lot of functionality additions and bug fixes in the
+	core modules, some of which would break user code; there were no additional
+	tests this time around, however.
+
+	* Updated all files in this distribution that display the physical address
+	of the Free Software Foundation, Inc. so it uses their current address of
+	"51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA" rather than their
+	previous address of "59 Temple Place, Suite 330, Boston, MA 02111-1307 USA";
+	this affects every COPYRIGHT AND LICENSE statement in the core files and the
+	'ReadMe' file, plus any 'GPL' or 'LGPL' license file.
+
+	* Updated the INSTALL file so that it is more generic, and all of my
+	distributions now use an identical copy of it.
+
+	* Updated the main heading in the ReadMe file to state the distribution's
+	name rather than a terse description of it.
+
+	* Updated build_expr_scalar_data_type_defn() to partially undo a change that
+	was part of r0.18, by removing some "|| 0"; they should have only been added
+	for numeric values, and not also boolean values.
+
+	* The 2 old SQLBuilder.pm boolean object properties 'delim_ident' and
+	'lc_nd_ident' were replaced by 1 new enumerated char str property
+	'ident_style', whose 3 possible values [YD_CS,NP_CI_UP,NP_CI_DN] represent
+	the 3 possible SQL identifier formats; correspondingly, the 2 accessor
+	methods delimited_identifiers() and lowercased_non_delimited_identifiers()
+	were merged into a single identifier_style() accessor method.  Also updated
+	the new() and quote_identifier() methods to use the new property in place of
+	the old ones.  Separately from this, a pristine SQL::Routine::SQLBuilder
+	object will now produce delimited SQL identifiers by default instead of
+	uppercased non-delimited identifiers; this change was made in new().
+
+	* Renamed the 2 build_schema_schema_[crea|dele]te() methods to
+	build_schema_[crea|dele]te(), and renamed the other old 10
+	build_schema_*_[crea|dele]te() methods to
+	build_schema_or_app_*_[crea|dele]te().  Also updated the old 3 'create'
+	methods for domains, sequence generators, and routines, so that they also
+	use the 'TEMPORARY' keyword like is the case with tables and views when they
+	are children of 'application' Nodes.
+
+	* Added 2 new methods, build_expr_row_data_type_defn() and its wrapper 
+	build_expr_row_data_type_or_domain_name(), which generate SQL definitions 
+	for row data types.  Also split up the 2 methods 
+	build_schema_or_app_domain_[crea|dele]te() into the 4 methods 
+	build_schema_or_app_[scalar|row]_domain_[crea|dele]te().
+
+	* Split up method build_schema_or_app_routine_create() into itself and the 
+	new method build_dmanip_routine_args(); moreover, an argument list for 
+	procedure and function routines is actually generated now, where none but a 
+	placeholder was done before (trigger argument lists still aren't done).
+
+	* Updated the 3 methods build_schema_or_app_routine_create(),
+	build_dmanip_routine_args(), and build_dmanip_routine_body() so that
+	declaration SQL is now made for all 4 of these routine return value or
+	argument or variable types: SCALAR, ROW, SC_ARY, RW_ARY; previously only
+	SCALAR definitions were made.
+
+	* Updated methods build_query_select_list(), build_query_query_expr_body()
+	to replace any '*' selections with explicit column lists; this corrects for
+	a potential problem where said view is part of a composite query and said
+	tables were previously declared in the database to have the columns in a
+	different order than our SQL::Routine's row_data_type fields.
+
+	* Deleted 1 method build_query_into_clause() and merged its functionality
+	into the 2 methods build_query_query_spec(), build_dmanip_call_sroutine().
+
+	* Updated the CURSOR definition code in build_dmanip_routine_body() to stay
+	compatible with a recent SQL::Routine change about where defining-views are.
+
+	* Renamed method build_identifier_schema_obj() to
+	build_identifier_schema_or_app_obj() and expanded its functionality to work
+	correctly for SRT Nodes that are either primary children of 'schema' or
+	'application' Nodes; objects in the latter case are treated as TEMPORARY and
+	referenced by default with the "MODULE." prefix; objects in the former case
+	now always have the schema name prefixed regardless of the FOR_DEFN setting
+	(they will only be different later following a possible new dbms-specific
+	option).  Updated all 29 invocations of the method to use the new name.
+
+	* Added new core file lib/SQL/Routine/SQLBuilder/L/en.pm, version 0.01,
+	which is a localization of SQL::Routine::SQLBuilder for English; this first
+	version has 6 user text messages, mostly generic.  Added new SQLBuilder.pm
+	private method _throw_error_message() which will throw exceptions that the
+	new en.pm can be used with.  4 of en.pm's messages are these generic ones:
+	'SRT_SB_METH_ARG_UNDEF', 'SRT_SB_METH_ARG_NO_[ARY|HASH|NODE]'.  Also added
+	private method _assert_arg_node_type() which can be used by any other method
+	expecting a SRT Node argument (all 52 such methods were likewise updated);
+	it throws an exception if the given arg value is the wrong Node type or not
+	a Node.  1 of en.pm's messages goes with this,
+	'SRT_SB_METH_ARG_WRONG_NODE_TYPE'.  Updated set_data_type_customizations() 
+	and identifier_style() to invoke _throw_error_message() directly, and the 
+	second one has its own 'SRT_SB_IDENT_STYLE_ARG_INVAL' in en.pm.
+
+	* Otherwise updated these SQLBuilder.pm methods to fix longstanding
+	incompatabilities with SQL::Routine: build_query_query_expr_body(),
+	build_access_grant(), build_access_revoke(), build_dmanip_call_sroutine(),
+	build_dmanip_call_uroutine().
+
+	* All test suite changes were small and dedicated to maintaining
+	compatability with the updated SQLBuilder.pm.  Updated t_SRT_SB_Util.pm's
+	error_to_string() method to use the new en.pm file.  Added 2 new tests to
+	SRT_SB_00_Compile.t to verify en.pm's compilation and its version.  Updated
+	SRT_SB_10_Generic.t to account for delimited identifiers being the default
+	and to invoke identifier_style(), and to rearrange the tests so the new
+	default format is tested first, and to account for schema names now being
+	output in create/delete statements, and to use the renamed build_schema_*()
+	method names.  The t_SRT_SB_Model.pm file had zero changes.
+
 2005-05-13   Darren Duncan <perl@DarrenDuncan.net>
 
 	* SQL-Routine-SQLBuilder Release 0.18.
