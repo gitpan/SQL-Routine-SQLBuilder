@@ -1,6 +1,26 @@
+TODO
+
+* Update all code files to have version numbers of format N.N.N rather than
+N.NN, and the new ones will be v-strings; at the same time, add dependency on
+something like only.pm, which knows how to enforce dependencies involving
+v-strings.
+
+* Update the white space of this distribution to follow some best practices. 
+This includes indenting with spaces instead of tabs, and having code lines not
+be longer than 80 or 78 characters.  Run through perltidy for the first time as
+well (though I was very consistent before), which may alter a few other things
+towards best practices.
+
+* Convert all class objects to be of the inside-out variety rather than
+hash-based, so to gain rigorous protection against external code directly
+accessing our object attributes, and to avoid related maintenance problems.
+
+* Once the above are done, announce Rosetta/SQL::Routine Developer Release #3.
+
 * Update the list of 'standard routines' in SQLBuilder (and SQL::Routine) to
 more closely reflect the SQL:2003 standard, fill other gaps.
 
 * Any further improvements will be implemented over time as they are needed. 
-See the separately released "Rosetta-Engine-Generic" distribution for a clue as
-it is the initial main dependent of the SQL::Routine::SQLBuilder.
+See the separately released "Rosetta-Engine-Generic" and "Rosetta-Emulator-DBI"
+distributions for a clue as they are the initial main dependents of the
+SQL::Routine::SQLBuilder.

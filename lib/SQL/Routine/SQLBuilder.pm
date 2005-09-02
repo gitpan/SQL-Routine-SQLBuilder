@@ -2,10 +2,10 @@
 use 5.008001; use utf8; use strict; use warnings;
 
 package SQL::Routine::SQLBuilder;
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 use Locale::KeyedText 1.05;
-use SQL::Routine 0.65;
+use SQL::Routine 0.69;
 
 ######################################################################
 
@@ -24,7 +24,7 @@ Core Modules: I<none>
 Non-Core Modules: 
 
 	Locale::KeyedText 1.05 (for error messages)
-	SQL::Routine 0.65
+	SQL::Routine 0.69
 
 =head1 COPYRIGHT AND LICENSE
 
@@ -286,9 +286,9 @@ sub get_data_type_customizations {
 sub set_data_type_customizations {
 	my ($builder, $new_values) = @_;
 	defined( $new_values ) or $builder->_throw_error_message( 
-		'SRT_N_METH_ARG_UNDEF', { 'METH' => 'set_attributes', 'ARGNM' => 'NEW_VALUES' } );
+		'SRT_SB_METH_ARG_UNDEF', { 'METH' => 'set_data_type_customizations', 'ARGNM' => 'NEW_VALUES' } );
 	ref($new_values) eq 'HASH' or $builder->_throw_error_message( 
-		'SRT_N_METH_ARG_NO_HASH', { 'METH' => 'set_attributes', 'ARGNM' => 'NEW_VALUES', 'ARGVL' => $new_values } );
+		'SRT_SB_METH_ARG_NO_HASH', { 'METH' => 'set_data_type_customizations', 'ARGNM' => 'NEW_VALUES', 'ARGVL' => $new_values } );
 	my $data_types = $builder->{$PROP_DATA_TYPES};
 	while( my ($key, $value) = each %{$new_values} ) {
 		$data_types->{$key} = $value;
@@ -499,7 +499,7 @@ sub build_identifier_element {
 	my ($builder, $object_node) = @_;
 	$builder->_assert_arg_node_type( 'build_identifier_element', 
 		'OBJECT_NODE', [], $object_node );
-	return $builder->quote_identifier( $object_node->get_literal_attribute( 'si_name' ) );
+	return $builder->quote_identifier( $object_node->get_attribute( 'si_name' ) );
 }
 
 sub build_identifier_host_parameter_name { 
@@ -509,7 +509,7 @@ sub build_identifier_host_parameter_name {
 	my ($builder, $routine_arg_node) = @_;
 	$builder->_assert_arg_node_type( 'build_identifier_host_parameter_name', 
 		'ROUTINE_ARG_NODE', ['routine_arg'], $routine_arg_node );
-	my $routine_arg_name = $routine_arg_node->get_literal_attribute( 'si_name' );
+	my $routine_arg_name = $routine_arg_node->get_attribute( 'si_name' );
 	if( $builder->{$PROP_POSIT_HPRMS} ) {
 		# Insert positional host parameter/placeholder.
 		push( @{$builder->{$PROP_PHP_MAP_ARY}}, $routine_arg_name );
@@ -534,9 +534,9 @@ sub build_identifier_schema_or_app_obj {
 	my ($builder, $object_node, $for_defn) = @_;
 	$builder->_assert_arg_node_type( 'build_identifier_schema_or_app_obj', 
 		'OBJECT_NODE', ['scalar_domain','row_domain','sequence','table','view','routine'], $object_node );
-	my $object_name = $object_node->get_literal_attribute( 'si_name' );
+	my $object_name = $object_node->get_attribute( 'si_name' );
 	my $parent_node = $object_node->get_primary_parent_attribute();
-	my $parent_name = $parent_node->get_literal_attribute( 'si_name' );
+	my $parent_name = $parent_node->get_attribute( 'si_name' );
 	if( $parent_node->get_node_type() eq 'schema' ) {
 		# If we get here then we are working with a long-lived schema object.
 		# TODO: support for referencing into other catalogs
@@ -569,17 +569,17 @@ sub build_identifier_view_src_field {
 	my ($builder, $view_src_field_node) = @_;
 	$builder->_assert_arg_node_type( 'build_identifier_view_src_field', 
 		'VIEW_SRC_FIELD_NODE', ['view_src_field'], $view_src_field_node );
-	my $row_dt_field_node = $view_src_field_node->get_node_ref_attribute( 'si_match_field' );
+	my $row_dt_field_node = $view_src_field_node->get_attribute( 'si_match_field' );
 	if( $builder->{$PROP_UNWRAP_VIEWS} ) {
 		# We are probably in the WHERE/etc clause of an INSERT|UPDATE|DELETE statement.
 		# Assume IUD statement is against one source for now, so unqualified src col names are fine.
-		return $builder->quote_identifier( $row_dt_field_node->get_literal_attribute( 'si_name' ) );
+		return $builder->quote_identifier( $row_dt_field_node->get_attribute( 'si_name' ) );
 	} else {
 		# We are in a normal SELECT statement or view.
 		# As usual, have fully qualified name to support multiple sources.
 		my $view_src_node = $view_src_field_node->get_primary_parent_attribute();
-		return $builder->quote_identifier( $view_src_node->get_literal_attribute( 'si_name' ) ).'.'.
-			$builder->quote_identifier( $row_dt_field_node->get_literal_attribute( 'si_name' ) );
+		return $builder->quote_identifier( $view_src_node->get_attribute( 'si_name' ) ).'.'.
+			$builder->quote_identifier( $row_dt_field_node->get_attribute( 'si_name' ) );
 	}
 }
 
@@ -592,17 +592,17 @@ sub build_identifier_temp_table_for_emul {
 		'INNER_VIEW_NODE', ['view'], $inner_view_node );
 	my @tt_name_parts = ();
 	my $curr_node = $inner_view_node;
-	push( @tt_name_parts, $curr_node->get_literal_attribute( 'si_name' ) );
+	push( @tt_name_parts, $curr_node->get_attribute( 'si_name' ) );
 	while( $curr_node->get_primary_parent_attribute()->get_node_type() eq 'view' ) {
 		$curr_node = $curr_node->get_primary_parent_attribute();
-		push( @tt_name_parts, $curr_node->get_literal_attribute( 'si_name' ) );
+		push( @tt_name_parts, $curr_node->get_attribute( 'si_name' ) );
 	}
 #	while( $curr_node->get_primary_parent_attribute()->get_node_type() eq 'routine' ) {
 #		$curr_node = $curr_node->get_primary_parent_attribute();
-#		push( @tt_name_parts, $curr_node->get_literal_attribute( 'si_name' ) );
+#		push( @tt_name_parts, $curr_node->get_attribute( 'si_name' ) );
 #	}
 	$curr_node = $curr_node->get_primary_parent_attribute();
-	push( @tt_name_parts, $curr_node->get_literal_attribute( 'si_name' ) );
+	push( @tt_name_parts, $curr_node->get_attribute( 'si_name' ) );
 	return $builder->quote_identifier( 
 		join( $builder->{$PROP_ET_JOIN_CHARS}, @tt_name_parts ) );
 }
@@ -613,22 +613,22 @@ sub build_expr {
 	my ($builder, $expr_node) = @_;
 	$builder->_assert_arg_node_type( 'build_expr', 
 		'EXPR_NODE', ['view_expr','routine_expr'], $expr_node );
-	my $cont_type = $expr_node->get_enumerated_attribute( 'cont_type' );
+	my $cont_type = $expr_node->get_attribute( 'cont_type' );
 	if( $cont_type eq 'LIST' ) {
 		return '('.join( ', ', map { $builder->build_expr( $_ ) } 
 			@{$expr_node->get_child_nodes()} ).')';
 	} else {
-		if( my $valf_literal = $expr_node->get_literal_attribute( 'valf_literal' ) ) {
+		if( my $valf_literal = $expr_node->get_attribute( 'valf_literal' ) ) {
 			my $scalar_data_type_node = $builder->_scalar_data_type_of_node( $expr_node );
 			return $builder->quote_literal( $valf_literal, 
-				$scalar_data_type_node->get_enumerated_attribute( 'base_type' ) );
-		} elsif( my $valf_src_field = $expr_node->get_node_ref_attribute( 'valf_src_field' ) ) {
+				$scalar_data_type_node->get_attribute( 'base_type' ) );
+		} elsif( my $valf_src_field = $expr_node->get_attribute( 'valf_src_field' ) ) {
 			return $builder->build_identifier_view_src_field( $valf_src_field );
-		} elsif( my $valf_result_field = $expr_node->get_node_ref_attribute( 'valf_result_field' ) ) {
+		} elsif( my $valf_result_field = $expr_node->get_attribute( 'valf_result_field' ) ) {
 			return $builder->build_identifier_element( $valf_result_field );
-		} elsif( my $valf_p_view_arg = $expr_node->get_node_ref_attribute( 'valf_p_view_arg' ) ) {
+		} elsif( my $valf_p_view_arg = $expr_node->get_attribute( 'valf_p_view_arg' ) ) {
 			return $builder->build_identifier_element( $valf_p_view_arg );
-		} elsif( my $routine_item_node = $expr_node->get_node_ref_attribute( 'valf_p_routine_item' ) ) {
+		} elsif( my $routine_item_node = $expr_node->get_attribute( 'valf_p_routine_item' ) ) {
 			if( $routine_item_node->get_node_type() eq 'routine_arg' and $builder->{$PROP_MAKE_HPRMS} ) {
 				# We are currently within an application-side routine, so arg is an app host param.
 				return $builder->build_identifier_host_parameter_name( $routine_item_node );
@@ -636,13 +636,13 @@ sub build_expr {
 				# We are *not* within an application-side routine, so arg is a compiled routine var, or is an in-rtn var.
 				return $builder->build_identifier_element( $routine_item_node );
 			}
-		} elsif( my $sequence_node = $expr_node->get_node_ref_attribute( 'valf_seq_next' ) ) {
+		} elsif( my $sequence_node = $expr_node->get_attribute( 'valf_seq_next' ) ) {
 			return $builder->build_expr_seq_next( $sequence_node );
-		} elsif( $expr_node->get_node_ref_attribute( 'valf_call_view' ) ) {
+		} elsif( $expr_node->get_attribute( 'valf_call_view' ) ) {
 			return $builder->build_query_subquery( $expr_node );
-		} elsif( $expr_node->get_enumerated_attribute( 'valf_call_sroutine' ) ) {
+		} elsif( $expr_node->get_attribute( 'valf_call_sroutine' ) ) {
 			return $builder->build_expr_call_sroutine( $expr_node );
-		} elsif( $expr_node->get_node_ref_attribute( 'valf_call_uroutine' ) ) {
+		} elsif( $expr_node->get_attribute( 'valf_call_uroutine' ) ) {
 			return $builder->build_expr_call_uroutine( $expr_node );
 		} else {}
 	}
@@ -655,24 +655,24 @@ sub build_expr_scalar_data_type_defn { # SQL:2003, 6.1 "<data type>" (p161)
 	$builder->_assert_arg_node_type( 'build_expr_scalar_data_type_defn', 
 		'SCALAR_DATA_TYPE_NODE', ['scalar_data_type'], $scalar_data_type_node );
 
-	my $base_type = $scalar_data_type_node->get_enumerated_attribute( 'base_type' );
-	my $num_precision = $scalar_data_type_node->get_literal_attribute( 'num_precision' ) || 0;
-	my $num_scale = $scalar_data_type_node->get_literal_attribute( 'num_scale' ) || 0;
-	my $num_octets = $scalar_data_type_node->get_literal_attribute( 'num_octets' ) || 0;
-	my $num_unsigned = $scalar_data_type_node->get_literal_attribute( 'num_unsigned' ) || 0;
-	my $max_octets = $scalar_data_type_node->get_literal_attribute( 'max_octets' ) || 0;
-	my $max_chars = $scalar_data_type_node->get_literal_attribute( 'max_chars' ) || 0;
-	my $store_fixed = $scalar_data_type_node->get_literal_attribute( 'store_fixed' );
-	my $char_enc = $scalar_data_type_node->get_enumerated_attribute( 'char_enc' );
-	my $trim_white = $scalar_data_type_node->get_literal_attribute( 'trim_white' );
-	my $uc_latin = $scalar_data_type_node->get_literal_attribute( 'uc_latin' );
-	my $lc_latin = $scalar_data_type_node->get_literal_attribute( 'lc_latin' );
-	my $pad_char = $scalar_data_type_node->get_literal_attribute( 'pad_char' );
-	my $trim_pad = $scalar_data_type_node->get_literal_attribute( 'trim_pad' );
-	my $calendar = $scalar_data_type_node->get_enumerated_attribute( 'calendar' );
-	my $range_min = $scalar_data_type_node->get_literal_attribute( 'range_min' );
-	my $range_max = $scalar_data_type_node->get_literal_attribute( 'range_max' );
-	my @allowed_values = map { $_->get_literal_attribute( 'si_value' ) } 
+	my $base_type = $scalar_data_type_node->get_attribute( 'base_type' );
+	my $num_precision = $scalar_data_type_node->get_attribute( 'num_precision' ) || 0;
+	my $num_scale = $scalar_data_type_node->get_attribute( 'num_scale' ) || 0;
+	my $num_octets = $scalar_data_type_node->get_attribute( 'num_octets' ) || 0;
+	my $num_unsigned = $scalar_data_type_node->get_attribute( 'num_unsigned' ) || 0;
+	my $max_octets = $scalar_data_type_node->get_attribute( 'max_octets' ) || 0;
+	my $max_chars = $scalar_data_type_node->get_attribute( 'max_chars' ) || 0;
+	my $store_fixed = $scalar_data_type_node->get_attribute( 'store_fixed' );
+	my $char_enc = $scalar_data_type_node->get_attribute( 'char_enc' );
+	my $trim_white = $scalar_data_type_node->get_attribute( 'trim_white' );
+	my $uc_latin = $scalar_data_type_node->get_attribute( 'uc_latin' );
+	my $lc_latin = $scalar_data_type_node->get_attribute( 'lc_latin' );
+	my $pad_char = $scalar_data_type_node->get_attribute( 'pad_char' );
+	my $trim_pad = $scalar_data_type_node->get_attribute( 'trim_pad' );
+	my $calendar = $scalar_data_type_node->get_attribute( 'calendar' );
+	my $range_min = $scalar_data_type_node->get_attribute( 'range_min' );
+	my $range_max = $scalar_data_type_node->get_attribute( 'range_max' );
+	my @allowed_values = map { $_->get_attribute( 'si_value' ) } 
 		@{$scalar_data_type_node->get_child_nodes( 'scalar_data_type_opt' )};
 		# Note: SRT guarantees that scalar_data_type_opt attrs have a defined value, though could be ''
 
@@ -839,7 +839,7 @@ sub build_expr_row_data_type_defn {
 		'ROW_DATA_TYPE_NODE', ['row_data_type'], $row_data_type_node );
 	return 'ROW ('.join( ', '."\n", 
 		map { $builder->build_identifier_element( $_ ).' '.
-			$builder->build_expr_scalar_data_type_defn( $_->get_node_ref_attribute( 'scalar_data_type' ) ) }
+			$builder->build_expr_scalar_data_type_defn( $_->get_attribute( 'scalar_data_type' ) ) }
 		@{$row_data_type_node->get_child_nodes( 'row_data_type_field' )} ).')';
 	# <data type> ::= <predefined type> | <row type> | <collection type> | ...
 	# <row type> ::= ROW <row type body>
@@ -857,7 +857,7 @@ sub build_expr_scalar_data_type_or_domain_name { # SQL:2003, 11.4 "<column defin
 		return $builder->build_expr_scalar_data_type_defn( $scalar_dt_or_dom_node ); # <data type>
 	} elsif( $builder->{$PROP_INLINE_DOMAIN} ) {
 		return $builder->build_expr_scalar_data_type_defn( 
-			$scalar_dt_or_dom_node->get_node_ref_attribute( 'data_type' ) ); # <data type>
+			$scalar_dt_or_dom_node->get_attribute( 'data_type' ) ); # <data type>
 	} else {
 		return $builder->build_identifier_schema_or_app_obj( $scalar_dt_or_dom_node ); # <domain name>
 	}
@@ -871,7 +871,7 @@ sub build_expr_row_data_type_or_domain_name { # SQL:2003, 11.4 "<column definiti
 		return $builder->build_expr_row_data_type_defn( $row_dt_or_dom_node ); # <data type>
 	} elsif( $builder->{$PROP_INLINE_DOMAIN} ) {
 		return $builder->build_expr_row_data_type_defn( 
-			$row_dt_or_dom_node->get_node_ref_attribute( 'data_type' ) ); # <data type>
+			$row_dt_or_dom_node->get_attribute( 'data_type' ) ); # <data type>
 	} else {
 		return $builder->build_identifier_schema_or_app_obj( $row_dt_or_dom_node ); # <domain name>
 	}
@@ -915,7 +915,7 @@ sub build_expr_cast_spec { # SQL:2003, 6.12 "<cast specification>" (p201)
 		'EXPR_NODE', ['view_expr','routine_expr'], $expr_node );
 	# We are assuming that enumerated attribute 'expr_type' is 'CAST'.
 	my %child_expr_nodes = map { ( 
-			$_->get_enumerated_attribute( 'call_sroutine_arg' ) => $_ 
+			$_->get_attribute( 'call_sroutine_arg' ) => $_ 
 		) } @{$expr_node->get_child_nodes()};
 	my $cast_target_node = $child_expr_nodes{'CAST_TARGET'};
 	my $cast_operand = $builder->build_expr( $child_expr_nodes{'CAST_OPERAND'} );
@@ -963,9 +963,9 @@ sub build_expr_call_sroutine {
 	my ($builder, $expr_node) = @_;
 	$builder->_assert_arg_node_type( 'build_expr_call_sroutine', 
 		'EXPR_NODE', ['view_expr','routine_expr'], $expr_node );
-	my $sroutine = $expr_node->get_enumerated_attribute( 'valf_call_sroutine' );
+	my $sroutine = $expr_node->get_attribute( 'valf_call_sroutine' );
 	my %child_exprs = map { ( 
-			$_->get_enumerated_attribute( 'call_sroutine_arg' ) => $_ 
+			$_->get_attribute( 'call_sroutine_arg' ) => $_ 
 		) } @{$expr_node->get_child_nodes()};
 	if( $sroutine eq 'CAST' ) {
 		return $builder->build_expr_cast_spec( $expr_node );
@@ -1145,16 +1145,16 @@ sub build_expr_call_uroutine {
 	my ($builder, $expr_node) = @_;
 	$builder->_assert_arg_node_type( 'build_expr_call_uroutine', 
 		'EXPR_NODE', ['view_expr','routine_expr'], $expr_node );
-	my $uroutine = $expr_node->get_enumerated_attribute( 'valf_call_uroutine' );
+	my $uroutine = $expr_node->get_attribute( 'valf_call_uroutine' );
 	my $uroutine_name = $builder->build_identifier_schema_or_app_obj( $uroutine );
 	my %uroutine_arg_exprs = 
-		map { ($_->get_node_ref_attribute( 'call_uroutine_arg' ) => $_) } 
+		map { ($_->get_attribute( 'call_uroutine_arg' )->get_self_id() => $_) } 
 		@{$expr_node->get_child_nodes()}; # gets child [view/routine]_expr Nodes
 	# Note: The build_expr() calls are done below to ensure the arg values are 
 	# defined in the same order they are output; this lets optional insertion 
 	# of positionally determined host params (and their mapping) to work right.
 	my $arg_val_list = join( ', ', 
-		map { $uroutine_arg_exprs{$_} ? $builder->build_expr( $uroutine_arg_exprs{$_} ) : 'NULL' } 
+		map { $uroutine_arg_exprs{$_->get_self_id()} ? $builder->build_expr( $uroutine_arg_exprs{$_->get_self_id()} ) : 'NULL' } 
 		@{$uroutine->get_child_nodes( 'routine_arg' )} );
 	return $uroutine_name.($arg_val_list ? '('.$arg_val_list.')' : '');
 }
@@ -1184,7 +1184,7 @@ sub build_query_from_clause {
 	my ($builder, $view_node) = @_;
 	$builder->_assert_arg_node_type( 'build_query_from_clause', 
 		'VIEW_NODE', ['view'], $view_node );
-	my $view_type = $view_node->get_enumerated_attribute( 'view_type' );
+	my $view_type = $view_node->get_attribute( 'view_type' );
 	my @view_src_nodes = @{$view_node->get_child_nodes( 'view_src' )};
 	my @view_join_nodes = @{$view_node->get_child_nodes( 'view_join' )};
 	if( @view_src_nodes == 0 ) {
@@ -1208,22 +1208,22 @@ sub build_query_from_clause {
 		# TODO: Support the Oracle-8 way of putting join conditions in WHERE.
 		my @sql_fragment_list = ();
 		push( @sql_fragment_list, $builder->build_query_table_factor( 
-			$view_join_nodes[0]->get_node_ref_attribute( 'lhs_src' ) ) );
+			$view_join_nodes[0]->get_attribute( 'lhs_src' ) ) );
 		foreach my $view_join_node (@view_join_nodes) {
-			my $join_op = $view_join_node->get_enumerated_attribute( 'join_op' );
+			my $join_op = $view_join_node->get_attribute( 'join_op' );
 			push( @sql_fragment_list, "\n".($join_op eq 'CROSS' ? 'CROSS JOIN' : 
 				$join_op eq 'INNER' ? 'INNER JOIN' : 
 				$join_op eq 'LEFT' ? 'LEFT OUTER JOIN' : 
 				$join_op eq 'RIGHT' ? 'RIGHT OUTER JOIN' : 
 				'FULL OUTER JOIN') ); # $join_op eq 'FULL'
 			push( @sql_fragment_list, $builder->build_query_table_factor( 
-				$view_join_node->get_node_ref_attribute( 'rhs_src' ) ) );
+				$view_join_node->get_attribute( 'rhs_src' ) ) );
 			my @join_on_sql = ();
 			foreach my $view_join_field_node (@{$view_join_node->get_child_nodes( 'view_join_field' )}) {
 				my $lhs_src_field_name = $builder->build_identifier_view_src_field( 
-					$view_join_field_node->get_node_ref_attribute( 'lhs_src_field' ) );
+					$view_join_field_node->get_attribute( 'lhs_src_field' ) );
 				my $rhs_src_field_name = $builder->build_identifier_view_src_field( 
-					$view_join_field_node->get_node_ref_attribute( 'rhs_src_field' ) );
+					$view_join_field_node->get_attribute( 'rhs_src_field' ) );
 				push( @join_on_sql, $rhs_src_field_name.' = '.$lhs_src_field_name );
 			}
 			push( @sql_fragment_list, 'ON '.join( ' AND ', @join_on_sql ) );
@@ -1238,7 +1238,7 @@ sub build_query_table_factor { # SQL:2003, 7.6 "<table reference>" (p303)
 		'VIEW_SRC_NODE', ['view_src'], $view_src_node );
 	# Maybe TODO: <derived column list>
 	my $correlation_name = $builder->build_identifier_element( $view_src_node );
-	my $match_node = $view_src_node->get_node_ref_attribute( 'match' );
+	my $match_node = $view_src_node->get_attribute( 'match' );
 	my $match_name = $builder->build_identifier_schema_or_app_obj( $match_node );
 	if( $match_node->get_node_type() eq 'view' ) {
 		if( $match_node->get_primary_parent_attribute()->get_node_type() eq 'view' ) {
@@ -1250,18 +1250,18 @@ sub build_query_table_factor { # SQL:2003, 7.6 "<table reference>" (p303)
 			} else {
 				# Call a named subquery; argument passing is supported.
 				my %src_args_to_view_exprs = 
-					map { ($_->get_node_ref_attribute( 'call_src_arg' ) => $_) } 
-					grep { $_->get_enumerated_attribute( 'view_part' ) eq 'FROM' } 
+					map { ($_->get_attribute( 'call_src_arg' )->get_self_id() => $_) } 
+					grep { $_->get_attribute( 'view_part' ) eq 'FROM' } 
 					@{$view_src_node->get_primary_parent_attribute()->get_child_nodes( 'view_expr' )};
 				my %view_args_to_src_args = 
-					map { ($_->get_node_ref_attribute( 'match_view_arg' ) => $_) } 
+					map { ($_->get_attribute( 'match_view_arg' )->get_self_id() => $_) } 
 					@{$view_src_node->get_child_nodes( 'view_src_arg' )};
 				# Note: The build_expr() calls are done below to ensure the arg values are 
 				# defined in the same order they are output; this lets optional insertion 
 				# of positionally determined host params (and their mapping) to work right.
 				my $arg_list = join( ', ', 
 					map { ($_ ? $builder->build_expr( $_ ) : 'NULL') } 
-					map { $src_args_to_view_exprs{$view_args_to_src_args{$_}} } 
+					map { $src_args_to_view_exprs{$view_args_to_src_args{$_->get_self_id()}->get_self_id()} } 
 					@{$match_node->get_child_nodes( 'view_arg' )} );
 				return $match_name.($arg_list?'('.$arg_list.')':'').' AS '.$correlation_name;
 			}
@@ -1283,7 +1283,7 @@ sub build_query_where_clause { # SQL:2003, 7.8 "<where clause>" (p319)
 		'VIEW_NODE', ['view'], $view_node );
 	my @expr_list = 
 		map { $builder->build_expr( $_ ) } 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'WHERE' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'WHERE' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	return @expr_list ? "\n".'WHERE '.$expr_list[0] : '';
 }
@@ -1295,7 +1295,7 @@ sub build_query_group_clause { # SQL:2003, 7.9 "<group by clause>" (p320)
 	my ($builder, $view_node) = @_;
 	my @expr_list = 
 		map { $builder->build_expr( $_ ) } 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'GROUP' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'GROUP' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	return @expr_list ? "\n".'GROUP BY '.join( ', ', @expr_list ) : '';
 	# Notes: Within build_expr(): 
@@ -1316,7 +1316,7 @@ sub build_query_having_clause { # SQL:2003, 7.10 "<having clause>" (p329)
 		'VIEW_NODE', ['view'], $view_node );
 	my @expr_list = 
 		map { $builder->build_expr( $_ ) } 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'HAVING' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'HAVING' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	return @expr_list ? "\n".'HAVING '.$expr_list[0] : '';
 }
@@ -1333,15 +1333,15 @@ sub build_query_window_clause { # SQL:2003, 7.11 "<window clause>" (p331)
 	# Also see SQL:2003, 10.10 "<sort specification list>" (p517) for future reference.
 	my @order_list = 
 		map { $builder->build_expr( $_ ) } 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'ORDER' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'ORDER' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	my @maxr_list = 
 		map { $builder->build_expr( $_ ) } 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'MAXR' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'MAXR' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	my @skipr_list = 
 		map { $builder->build_expr( $_ ) } 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'SKIPR' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'SKIPR' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	return (@order_list ? "\n".'ORDER BY '.join( ', ', @order_list ) : '').
 		(@maxr_list ? "\n".'LIMIT '.$maxr_list[0] : '').
@@ -1360,7 +1360,7 @@ sub build_query_query_spec {
 		'INTO_DEST_NODE', ['routine_arg','routine_var'], $into_dest_node );
 	# Method assumes that $view_node.view_type ne 'COMPOUND'; 
 	# method should never be invoked for those kinds of views.
-	my $set_quantifier = $view_node->get_literal_attribute( 'distinct_rows' ) ? 'DISTINCT' : 'ALL';
+	my $set_quantifier = $view_node->get_attribute( 'distinct_rows' ) ? 'DISTINCT' : 'ALL';
 	my $select_list = $builder->build_query_select_list( $view_node );
 	my $into_clause = $into_dest_node ? "\n".'INTO '.$builder->build_identifier_element( $into_dest_node ) : '';
 	my $table_expression = $builder->build_query_table_expr( $view_node );
@@ -1375,7 +1375,7 @@ sub build_query_select_list { # SQL:2003, 7.12 "<query specification>" (p341)
 	my ($builder, $view_node) = @_;
 	$builder->_assert_arg_node_type( 'build_query_select_list', 
 		'VIEW_NODE', ['view'], $view_node );
-	if( $view_node->get_enumerated_attribute( 'view_type' ) eq 'ALIAS' ) {
+	if( $view_node->get_attribute( 'view_type' ) eq 'ALIAS' ) {
 		# Each result column must match a source column exactly.
 		# Every source table/view result column or var field is output, with the same name.
 		# It is assumed/required that the view has the same 'row_data_type' as the source.
@@ -1391,20 +1391,20 @@ sub build_query_select_list { # SQL:2003, 7.12 "<query specification>" (p341)
 		# We have three statements below instead of one because we want the result cols shown  
 		# in order of the view's "row_data_type_field" Nodes, not the order of the 'view_part' if different.
 		my %select_list_view_fields = 
-			map { ($_->get_node_ref_attribute( 'si_row_field' ) => $_->get_node_ref_attribute( 'src_field' )) } 
+			map { ($_->get_attribute( 'si_row_field' )->get_self_id() => $_->get_attribute( 'src_field' )) } 
 			@{$view_node->get_child_nodes( 'view_field' )}; # note: 'src_field' may be undefined
 		my %select_list_view_exprs = 
-			map { ($_->get_node_ref_attribute( 'set_result_field' ) => $_) } 
-			grep { $_->get_enumerated_attribute( 'view_part' ) eq 'RESULT' } 
+			map { ($_->get_attribute( 'set_result_field' )->get_self_id() => $_) } 
+			grep { $_->get_attribute( 'view_part' ) eq 'RESULT' } 
 			@{$view_node->get_child_nodes( 'view_expr' )};
 		# Note: The build_expr() calls are done below to ensure the arg values are 
 		# defined in the same order they are output; this lets optional insertion 
 		# of positionally determined host params (and their mapping) to work right.
 		my $row_data_type_node = $builder->_row_data_type_of_node( $view_node );
 		return join( ', '."\n",
-			map { ($select_list_view_fields{$_} ? 
-					$builder->build_identifier_view_src_field( $select_list_view_fields{$_} ) : 
-					$select_list_view_exprs{$_} ? $builder->build_expr( $select_list_view_exprs{$_} ) : 'NULL').
+			map { ($select_list_view_fields{$_->get_self_id()} ? 
+					$builder->build_identifier_view_src_field( $select_list_view_fields{$_->get_self_id()} ) : 
+					$select_list_view_exprs{$_->get_self_id()} ? $builder->build_expr( $select_list_view_exprs{$_->get_self_id()} ) : 'NULL').
 				' AS '.$builder->build_identifier_element( $_ ) } 
 			@{$row_data_type_node->get_child_nodes( 'row_data_type_field' )} );
 		# Note that the default of NULL thing deals with view's row field that don't have any view_expr or src_field.
@@ -1419,13 +1419,13 @@ sub build_query_query_expr { # SQL:2003, 7.13 "<query expression>" (p351)
 	my ($builder, $view_node) = @_;
 	$builder->_assert_arg_node_type( 'build_query_query_expr', 
 		'VIEW_NODE', ['view'], $view_node );
-	my $view_type = $view_node->get_enumerated_attribute( 'view_type' );
+	my $view_type = $view_node->get_attribute( 'view_type' );
 	my $with_clause = '';
 	unless( $builder->{$PROP_INLINE_SUBQ} ) {
 		my @with_list = ();
 		my $recursive = 0;
 		foreach my $child_view_node (@{$view_node->get_child_nodes( 'view' )}) {
-			if( $child_view_node->get_literal_attribute( 'recursive' ) ) {
+			if( $child_view_node->get_attribute( 'recursive' ) ) {
 				$recursive = 1;
 			}
 			my $with_item = $builder->build_identifier_element( $child_view_node );
@@ -1452,14 +1452,14 @@ sub build_query_query_expr_body { # SQL:2003, 7.13 "<query expression>" (p351)
 	my ($builder, $view_node) = @_;
 	$builder->_assert_arg_node_type( 'build_query_query_expr_body', 
 		'VIEW_NODE', ['view'], $view_node );
-	if( $view_node->get_enumerated_attribute( 'view_type' ) eq 'COMPOUND' ) {
+	if( $view_node->get_attribute( 'view_type' ) eq 'COMPOUND' ) {
 		# Result is multiple "SELECT ..." connected by one or more compound operators.
-		my $compound_op = $view_node->get_enumerated_attribute( 'compound_op' );
-		my $set_quantifier = $view_node->get_literal_attribute( 'distinct_rows' ) ? 'DISTINCT' : 'ALL';
+		my $compound_op = $view_node->get_attribute( 'compound_op' );
+		my $set_quantifier = $view_node->get_attribute( 'distinct_rows' ) ? 'DISTINCT' : 'ALL';
 		my @operand_list = ();
 		foreach my $elem_node (@{$view_node->get_child_nodes( 'view_compound_elem' )}) {
-			my $view_src_node = $elem_node->get_node_ref_attribute( 'operand' );
-			my $match_node = $view_src_node->get_node_ref_attribute( 'match' );
+			my $view_src_node = $elem_node->get_attribute( 'operand' );
+			my $match_node = $view_src_node->get_attribute( 'match' );
 			my $match_name = $builder->build_identifier_schema_or_app_obj( $match_node );
 			# Each compounding operand is assumed to have the same row data type as the view.
 			if( $match_node->get_node_type() eq 'table' ) {
@@ -1493,7 +1493,7 @@ sub build_query_subquery { # SQL:2003, 7.15 "<subquery>" (p370)
 	my ($builder, $expr_node) = @_;
 	$builder->_assert_arg_node_type( 'build_query_subquery', 
 		'EXPR_NODE', ['view_expr'], $expr_node );
-	my $cview = $expr_node->get_enumerated_attribute( 'valf_call_view' );
+	my $cview = $expr_node->get_attribute( 'valf_call_view' );
 	if( $builder->{$PROP_INLINE_SUBQ} ) {
 		# Embed an anonymous subquery; argument passing is not yet supported.
 		my $query_expression = $builder->build_query_query_expr( $cview );
@@ -1502,13 +1502,13 @@ sub build_query_subquery { # SQL:2003, 7.15 "<subquery>" (p370)
 		# Call a named subquery; argument passing is supported.
 		my $cview_name = $builder->build_identifier_schema_or_app_obj( $cview );
 		my %cview_arg_exprs = 
-			map { ($_->get_node_ref_attribute( 'call_view_arg' ) => $_) } 
+			map { ($_->get_attribute( 'call_view_arg' )->get_self_id() => $_) } 
 			@{$expr_node->get_child_nodes()}; # gets child view_expr Nodes
 		# Note: The build_expr() calls are done below to ensure the arg values are 
 		# defined in the same order they are output; this lets optional insertion 
 		# of positionally determined host params (and their mapping) to work right.
 		my $arg_val_list = join( ', ', 
-			map { $cview_arg_exprs{$_} ? $builder->build_expr( $cview_arg_exprs{$_} ) : 'NULL' } 
+			map { $cview_arg_exprs{$_->get_self_id()} ? $builder->build_expr( $cview_arg_exprs{$_->get_self_id()} ) : 'NULL' } 
 			@{$cview->get_child_nodes( 'view_arg' )} );
 		return $cview_name.($arg_val_list ? '('.$arg_val_list.')' : '');
 	}
@@ -1585,12 +1585,12 @@ sub build_schema_or_app_sequence_create { # SQL:2003, 11.62 "<sequence generator
 		'SEQUENCE_NODE', ['sequence'], $sequence_node );
 	# SQL:2003 allows multiple data types for this, but we stick to integers for now.
 	my $sequence_name = $builder->build_identifier_schema_or_app_obj( $sequence_node, 1 );
-	my $increment = $sequence_node->get_literal_attribute( 'increment' );
-	my $min_val = $sequence_node->get_literal_attribute( 'min_val' );
-	my $max_val = $sequence_node->get_literal_attribute( 'max_val' );
-	my $start_val = $sequence_node->get_literal_attribute( 'start_val' );
-	my $cycle = $sequence_node->get_literal_attribute( 'cycle' );
-	my $order = $sequence_node->get_literal_attribute( 'order' );
+	my $increment = $sequence_node->get_attribute( 'increment' );
+	my $min_val = $sequence_node->get_attribute( 'min_val' );
+	my $max_val = $sequence_node->get_attribute( 'max_val' );
+	my $start_val = $sequence_node->get_attribute( 'start_val' );
+	my $cycle = $sequence_node->get_attribute( 'cycle' );
+	my $order = $sequence_node->get_attribute( 'order' );
 	# Note that SQL::Routine guarantees all integer attributes are already valid integers.
 	my $is_temp = ($sequence_node->get_primary_parent_attribute()->get_node_type() eq 'application');
 	return 'CREATE'.($is_temp ? ' TEMPORARY' : '').' SEQUENCE '.$sequence_name.
@@ -1630,29 +1630,29 @@ sub build_schema_or_app_table_create {
 	my @table_field_sql = ();
 	my %col_name_cache = (); # used when making ind defs
 	my %mandatory_field_cache = (); # used when making ind defs
-	my %table_fields_by_row_field = map { ($_->get_node_ref_attribute( 'si_row_field' ) => $_) } 
+	my %table_fields_by_row_field = map { ($_->get_attribute( 'si_row_field' )->get_self_id() => $_) } 
 		@{$table_node->get_child_nodes( 'table_field' )};
 	my $row_data_type_node = $builder->_row_data_type_of_node( $table_node ); # is always set
 	my $row_domain_node = $builder->_row_domain_of_node( $table_node ); # may be undefined
 	foreach my $row_field_node (@{$row_data_type_node->get_child_nodes( 'row_data_type_field' )}) {
 		my $table_field_name = $builder->build_identifier_element( $row_field_node );
-		unless( exists( $col_name_cache{$row_field_node} ) ) {
-			$col_name_cache{$row_field_node} = $table_field_name;
+		unless( exists( $col_name_cache{$row_field_node->get_self_id()} ) ) {
+			$col_name_cache{$row_field_node->get_self_id()} = $table_field_name;
 		}
-		my $scalar_data_type_node = $row_field_node->get_node_ref_attribute( 'scalar_data_type' );
+		my $scalar_data_type_node = $row_field_node->get_attribute( 'scalar_data_type' );
 		my $dt_or_dom_sql = $builder->build_expr_scalar_data_type_or_domain_name( 
 			$row_domain_node ? $builder->find_scalar_domain_for_row_domain_field(
 			$scalar_data_type_node, $row_domain_node ) : $scalar_data_type_node );
 		my $table_field_sql_item = $table_field_name.' '.$dt_or_dom_sql;
-		if( my $table_field_node = $table_fields_by_row_field{$row_field_node} ) {
-			my $mandatory = $table_field_node->get_literal_attribute( 'mandatory' );
-			$mandatory and $mandatory_field_cache{$row_field_node} = 1;
-			my $default_val = $table_field_node->get_literal_attribute( 'default_val' );
-			my $auto_inc = $table_field_node->get_literal_attribute( 'auto_inc' );
-			my $default_seq_node = $table_field_node->get_node_ref_attribute( 'default_seq' );
+		if( my $table_field_node = $table_fields_by_row_field{$row_field_node->get_self_id()} ) {
+			my $mandatory = $table_field_node->get_attribute( 'mandatory' );
+			$mandatory and $mandatory_field_cache{$row_field_node->get_self_id()} = 1;
+			my $default_val = $table_field_node->get_attribute( 'default_val' );
+			my $auto_inc = $table_field_node->get_attribute( 'auto_inc' );
+			my $default_seq_node = $table_field_node->get_attribute( 'default_seq' );
 			$table_field_sql_item .= ($mandatory ? ' NOT NULL' : ' NULL').
 				(defined( $default_val ) ? ' DEFAULT '.$builder->quote_literal( 
-					$default_val, $scalar_data_type_node->get_enumerated_attribute( 'base_type' ) ) : '').
+					$default_val, $scalar_data_type_node->get_attribute( 'base_type' ) ) : '').
 				($auto_inc ? ' AUTO_INCREMENT' : '').
 				($default_seq_node ? ' DEFAULT '.
 					$builder->build_expr_seq_next( $default_seq_node ) : '');
@@ -1665,10 +1665,10 @@ sub build_schema_or_app_table_create {
 	my $pk_is_made = 0;
 	foreach my $table_index_node (@{$table_node->get_child_nodes( 'table_index' )}) {
 		my $table_index_name = $builder->build_identifier_element( $table_index_node );
-		my $index_type = $table_index_node->get_enumerated_attribute( 'index_type' );
+		my $index_type = $table_index_node->get_attribute( 'index_type' );
 		my @table_index_field_nodes = @{$table_index_node->get_child_nodes( 'table_index_field' )};
 		my $local_field_names_sql = join( ', ', map { 
-				$col_name_cache{$_->get_node_ref_attribute( 'si_field' )} 
+				$col_name_cache{$_->get_attribute( 'si_field' )->get_self_id()} 
 			} @table_index_field_nodes );
 		if( $index_type eq 'ATOMIC' ) {
 			push( @table_index_sql, 'INDEX '.$table_index_name.' ('.$local_field_names_sql.')' );
@@ -1682,8 +1682,8 @@ sub build_schema_or_app_table_create {
 				# All component columns of a primary key must be mandatory; check for it.
 				$make_a_pk_now = 1;
 				foreach my $table_index_field_node (@table_index_field_nodes) {
-					my $row_field_node = $table_index_field_node->get_node_ref_attribute( 'si_field' );
-					unless( $mandatory_field_cache{$row_field_node} ) {
+					my $row_field_node = $table_index_field_node->get_attribute( 'si_field' );
+					unless( $mandatory_field_cache{$row_field_node->get_self_id()} ) {
 						$make_a_pk_now = 0;
 						last;
 					}
@@ -1698,9 +1698,9 @@ sub build_schema_or_app_table_create {
 		}
 		if( $index_type eq 'FOREIGN' or $index_type eq 'UFOREIGN' ) {
 			my $foreign_table_name = $builder->build_identifier_schema_or_app_obj( 
-				$table_index_node->get_node_ref_attribute( 'f_table' ) );
+				$table_index_node->get_attribute( 'f_table' ) );
 			my $foreign_field_names_sql = join( ', ', map { 
-					$builder->build_identifier_element( $_->get_node_ref_attribute( 'f_field' ) )
+					$builder->build_identifier_element( $_->get_attribute( 'f_field' ) )
 				} @table_index_field_nodes );
 			push( @table_index_sql, 'CONSTRAINT '.$table_index_name.' FOREIGN KEY'.
 				' ('.$local_field_names_sql.') REFERENCES '.$foreign_table_name.
@@ -1749,15 +1749,15 @@ sub build_schema_or_app_routine_create {
 	my ($builder, $routine_node) = @_;
 	$builder->_assert_arg_node_type( 'build_schema_or_app_routine_create', 
 		'ROUTINE_NODE', ['routine'], $routine_node );
-	my $routine_type = $routine_node->get_enumerated_attribute( 'routine_type' );
+	my $routine_type = $routine_node->get_attribute( 'routine_type' );
 	my $routine_name = $builder->build_identifier_schema_or_app_obj( $routine_node, 1 );
 	my $is_temp = ($routine_node->get_primary_parent_attribute()->get_node_type() eq 'application');
 	if( $routine_type eq 'PACKAGE' ) {
 		# Not implemented yet.
 	} elsif( $routine_type eq 'TRIGGER' ) {
 		my $table_or_view_name = $builder->build_identifier_schema_or_app_obj( 
-			$routine_node->get_node_ref_attribute( 'trigger_on' ) );
-		my $trigger_event = $routine_node->get_enumerated_attribute( 'trigger_event' );
+			$routine_node->get_attribute( 'trigger_on' ) );
+		my $trigger_event = $routine_node->get_attribute( 'trigger_event' );
 		my $trigger_event_sql = $trigger_event eq 'BEFR_INS' ? 'BEFORE INSERT' : 
 			$trigger_event eq 'AFTR_INS' ? 'AFTER INSERT' : 
 			$trigger_event eq 'INST_INS' ? 'INSTEAD OF INSERT' : 
@@ -1768,7 +1768,7 @@ sub build_schema_or_app_routine_create {
 			$trigger_event eq 'AFTR_DEL' ? 'AFTER DELETE' : 
 			'INSTEAD OF DELETE'; # $trigger_event eq 'INST_DEL'
 			# Note: INSTEAD OF is not standard SQL, but supported by SQLServer 2000, maybe Oracle, ?.
-		my $for_each_stmt = $routine_node->get_literal_attribute( 'trigger_per_stmt' );
+		my $for_each_stmt = $routine_node->get_attribute( 'trigger_per_stmt' );
 		# TODO: Implement optional OF <trigger column list>.
 		my @transition_var_names = (); # TODO: NEW/OLD ROW AS <... variable name>
 		my $triggered_sql_statement = $builder->build_dmanip_routine_body( $routine_node, 1 );
@@ -1792,21 +1792,21 @@ sub build_schema_or_app_routine_create {
 		my $routine_args = $builder->build_dmanip_routine_args( $routine_node );
 		# TODO: <routine characteristics> where appropriate.
 		my $routine_body = $builder->build_dmanip_routine_body( $routine_node );
-		my $return_cont_type = $routine_node->get_enumerated_attribute( 'return_cont_type' );
+		my $return_cont_type = $routine_node->get_attribute( 'return_cont_type' );
 		my $return_data_type = '';
 		if( $return_cont_type eq 'ERROR' ) {
 			# Not implemented yet.
 		} elsif( $return_cont_type eq 'SCALAR' ) {
-			my $dt_or_dom_node = $routine_node->get_node_ref_attribute( 'return_scalar_data_type' );
+			my $dt_or_dom_node = $routine_node->get_attribute( 'return_scalar_data_type' );
 			my $return_data_type = $builder->build_expr_scalar_data_type_or_domain_name( $dt_or_dom_node );
 		} elsif( $return_cont_type eq 'ROW' ) {
-			my $dt_or_dom_node = $routine_node->get_node_ref_attribute( 'return_row_data_type' );
+			my $dt_or_dom_node = $routine_node->get_attribute( 'return_row_data_type' );
 			my $return_data_type = $builder->build_expr_row_data_type_or_domain_name( $dt_or_dom_node );
 		} elsif( $return_cont_type eq 'SC_ARY' ) {
-			my $dt_or_dom_node = $routine_node->get_node_ref_attribute( 'return_scalar_data_type' );
+			my $dt_or_dom_node = $routine_node->get_attribute( 'return_scalar_data_type' );
 			my $return_data_type = $builder->build_expr_scalar_data_type_or_domain_name( $dt_or_dom_node ).' ARRAY';
 		} elsif( $return_cont_type eq 'RW_ARY' ) {
-			my $dt_or_dom_node = $routine_node->get_node_ref_attribute( 'return_row_data_type' );
+			my $dt_or_dom_node = $routine_node->get_attribute( 'return_row_data_type' );
 			my $return_data_type = $builder->build_expr_row_data_type_or_domain_name( $dt_or_dom_node ).' ARRAY';
 		} elsif( $return_cont_type eq 'CONN' ) {
 			# Not implemented yet.
@@ -1830,7 +1830,7 @@ sub build_schema_or_app_routine_delete {
 	my ($builder, $routine_node) = @_;
 	$builder->_assert_arg_node_type( 'build_schema_or_app_routine_delete', 
 		'ROUTINE_NODE', ['routine'], $routine_node );
-	my $routine_type = $routine_node->get_enumerated_attribute( 'routine_type' );
+	my $routine_type = $routine_node->get_attribute( 'routine_type' );
 	my $routine_name = $builder->build_identifier_schema_or_app_obj( $routine_node, 1 );
 	# Note: 10.6 "<specific routine designator>" (p499) may be useful later.
 	if( $routine_type eq 'PACKAGE' ) {
@@ -1878,9 +1878,9 @@ sub build_access_grant {
 	if( $node_type eq 'role' ) {
 		my @grant_stmts = ();
 		foreach my $priv_on_node (@{$grantee_node->get_child_nodes( 'privilege_on' )}) {
-			my $object_node = $priv_on_node->get_node_ref_attribute( 'si_priv_on' );
+			my $object_node = $priv_on_node->get_attribute( 'si_priv_on' );
 			my $object_name = $builder->build_identifier_schema_or_app_obj( $object_node );
-			my @priv_types = map { $_->get_enumerated_attribute( 'si_priv_type' ) } 
+			my @priv_types = map { $_->get_attribute( 'si_priv_type' ) } 
 				@{$priv_on_node->get_child_nodes( 'privilege_for' )};
 			my @object_privs = ();
 			if( grep { $_ eq 'ALL' } @priv_types ) {
@@ -1918,7 +1918,7 @@ sub build_access_revoke {
 	if( $node_type eq 'role' ) {
 		my @revoke_stmts = ();
 		foreach my $priv_on_node (@{$grantee_node->get_child_nodes( 'privilege_on' )}) {
-			my $object_node = $priv_on_node->get_node_ref_attribute( 'si_priv_on' );
+			my $object_node = $priv_on_node->get_attribute( 'si_priv_on' );
 			my $object_name = $builder->build_identifier_schema_or_app_obj( $object_node );
 			push( @revoke_stmts, 'REVOKE ALL PRIVILEGES'.
 				' ON '.$object_name.' FROM '.$grantee_name.';' );
@@ -1943,23 +1943,23 @@ sub build_dmanip_routine_args {
 	foreach my $rtn_arg_node (@{$routine_node->get_child_nodes( 'routine_arg' )}) {
 		# TODO: <parameter mode> ::= IN | OUT | INOUT
 		my $arg_name = $builder->build_identifier_element( $rtn_arg_node );
-		my $cont_type = $rtn_arg_node->get_enumerated_attribute( 'cont_type' );
+		my $cont_type = $rtn_arg_node->get_attribute( 'cont_type' );
 		if( $cont_type eq 'ERROR' ) {
 			# Not implemented yet.
 		} elsif( $cont_type eq 'SCALAR' ) {
-			my $dt_or_dom_node = $rtn_arg_node->get_node_ref_attribute( 'scalar_data_type' );
+			my $dt_or_dom_node = $rtn_arg_node->get_attribute( 'scalar_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_scalar_data_type_or_domain_name( $dt_or_dom_node );
 			push( @rtn_arg_declare_sql, $arg_name.' '.$dt_or_dom_sql.';' );
 		} elsif( $cont_type eq 'ROW' ) {
-			my $dt_or_dom_node = $rtn_arg_node->get_node_ref_attribute( 'row_data_type' );
+			my $dt_or_dom_node = $rtn_arg_node->get_attribute( 'row_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_row_data_type_or_domain_name( $dt_or_dom_node );
 			push( @rtn_arg_declare_sql, $arg_name.' '.$dt_or_dom_sql.';' );
 		} elsif( $cont_type eq 'SC_ARY' ) {
-			my $dt_or_dom_node = $rtn_arg_node->get_node_ref_attribute( 'scalar_data_type' );
+			my $dt_or_dom_node = $rtn_arg_node->get_attribute( 'scalar_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_scalar_data_type_or_domain_name( $dt_or_dom_node );
 			push( @rtn_arg_declare_sql, $arg_name.' '.$dt_or_dom_sql.' ARRAY;' );
 		} elsif( $cont_type eq 'RW_ARY' ) {
-			my $dt_or_dom_node = $rtn_arg_node->get_node_ref_attribute( 'row_data_type' );
+			my $dt_or_dom_node = $rtn_arg_node->get_attribute( 'row_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_row_data_type_or_domain_name( $dt_or_dom_node );
 			push( @rtn_arg_declare_sql, $arg_name.' '.$dt_or_dom_sql.' ARRAY;' );
 		} elsif( $cont_type eq 'CONN' ) {
@@ -1986,32 +1986,32 @@ sub build_dmanip_routine_body {
 	my @rtn_var_declare_sql = ();
 	foreach my $rtn_var_node (@{$routine_node->get_child_nodes( 'routine_var' )}) {
 		my $var_name = $builder->build_identifier_element( $rtn_var_node );
-		my $cont_type = $rtn_var_node->get_enumerated_attribute( 'cont_type' );
+		my $cont_type = $rtn_var_node->get_attribute( 'cont_type' );
 		if( $cont_type eq 'ERROR' ) {
 			# Not implemented yet.
 		} elsif( $cont_type eq 'SCALAR' ) {
-			my $dt_or_dom_node = $rtn_var_node->get_node_ref_attribute( 'scalar_data_type' );
+			my $dt_or_dom_node = $rtn_var_node->get_attribute( 'scalar_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_scalar_data_type_or_domain_name( $dt_or_dom_node );
-			my $init_lit_val = $rtn_var_node->get_literal_attribute( 'init_lit_val' );
-			my $is_constant = $rtn_var_node->get_literal_attribute( 'is_constant' );
+			my $init_lit_val = $rtn_var_node->get_attribute( 'init_lit_val' );
+			my $is_constant = $rtn_var_node->get_attribute( 'is_constant' );
 			push( @rtn_var_declare_sql, 
 				($is_ora_routines ? '' : 'DECLARE ').
 				$var_name.' '.$dt_or_dom_sql.
 				# TODO: use $is_constant
 				(defined( $init_lit_val ) ? ' DEFAULT '.$builder->quote_literal( $init_lit_val, 
-					$builder->_scalar_data_type_of_node( $rtn_var_node )->get_enumerated_attribute( 'base_type' ) ) : '').
+					$builder->_scalar_data_type_of_node( $rtn_var_node )->get_attribute( 'base_type' ) ) : '').
 				';'
 			);
 		} elsif( $cont_type eq 'ROW' ) {
-			my $dt_or_dom_node = $rtn_var_node->get_node_ref_attribute( 'row_data_type' );
+			my $dt_or_dom_node = $rtn_var_node->get_attribute( 'row_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_row_data_type_or_domain_name( $dt_or_dom_node );
 			push( @rtn_var_declare_sql, ($is_ora_routines ? '' : 'DECLARE ').$var_name.' '.$dt_or_dom_sql.';' );
 		} elsif( $cont_type eq 'SC_ARY' ) {
-			my $dt_or_dom_node = $rtn_var_node->get_node_ref_attribute( 'scalar_data_type' );
+			my $dt_or_dom_node = $rtn_var_node->get_attribute( 'scalar_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_scalar_data_type_or_domain_name( $dt_or_dom_node );
 			push( @rtn_var_declare_sql, ($is_ora_routines ? '' : 'DECLARE ').$var_name.' '.$dt_or_dom_sql.' ARRAY;' );
 		} elsif( $cont_type eq 'RW_ARY' ) {
-			my $dt_or_dom_node = $rtn_var_node->get_node_ref_attribute( 'row_data_type' );
+			my $dt_or_dom_node = $rtn_var_node->get_attribute( 'row_data_type' );
 			my $dt_or_dom_sql = $builder->build_expr_row_data_type_or_domain_name( $dt_or_dom_node );
 			push( @rtn_var_declare_sql, ($is_ora_routines ? '' : 'DECLARE ').$var_name.' '.$dt_or_dom_sql.' ARRAY;' );
 		} elsif( $cont_type eq 'CONN' ) {
@@ -2022,7 +2022,7 @@ sub build_dmanip_routine_body {
 				my $query_expr = $builder->build_query_query_expr( $view_node );
 				my $order_by_clause = $builder->build_query_window_clause( $view_node );
 				my $updatability_clause = 
-					$rtn_var_node->get_literal_attribute( 'curs_for_update' ) ? 
+					$rtn_var_node->get_attribute( 'curs_for_update' ) ? 
 					'FOR UPDATE' : 'FOR READ ONLY'; # TODO: [ OF <column name list> ]
 				# TODO: sensitivity, scrollability, holdability, returnability
 				my $cursor_spec = $query_expr.' '.$order_by_clause.' '.$updatability_clause;
@@ -2059,10 +2059,10 @@ sub build_dmanip_routine_stmt {
 	my ($builder, $rtn_stmt_node) = @_;
 	$builder->_assert_arg_node_type( 'build_dmanip_routine_stmt', 
 		'STMT_NODE', ['routine_stmt'], $rtn_stmt_node );
-	if( my $compound_stmt_routine = $rtn_stmt_node->get_node_ref_attribute( 'block_routine' ) ) {
+	if( my $compound_stmt_routine = $rtn_stmt_node->get_attribute( 'block_routine' ) ) {
 		return $builder->build_dmanip_routine_body( $compound_stmt_routine );
-	} elsif( my $assign_dest_node = $rtn_stmt_node->get_node_ref_attribute( 'assign_dest' ) || 
-			$rtn_stmt_node->get_node_ref_attribute( 'assign_dest' ) ) {
+	} elsif( my $assign_dest_node = $rtn_stmt_node->get_attribute( 'assign_dest' ) || 
+			$rtn_stmt_node->get_attribute( 'assign_dest' ) ) {
 		my $dest = $builder->build_identifier_element( $assign_dest_node );
 		my $src = $builder->build_expr( 
 			$rtn_stmt_node->get_child_nodes( 'routine_expr' )->[0] );
@@ -2071,9 +2071,9 @@ sub build_dmanip_routine_stmt {
 		} else {
 			return 'SET '.$dest.' = '.$src.';'."\n";
 		}
-	} elsif( $rtn_stmt_node->get_enumerated_attribute( 'call_sroutine' ) ) {
+	} elsif( $rtn_stmt_node->get_attribute( 'call_sroutine' ) ) {
 		return $builder->build_dmanip_call_sroutine( $rtn_stmt_node );
-	} elsif( $rtn_stmt_node->get_node_ref_attribute( 'call_uroutine' ) ) {
+	} elsif( $rtn_stmt_node->get_attribute( 'call_uroutine' ) ) {
 		return $builder->build_dmanip_call_uroutine( $rtn_stmt_node );
 	} else {}
 }
@@ -2089,41 +2089,41 @@ sub build_dmanip_call_sroutine {
 	my ($builder, $rtn_stmt_node) = @_;
 	$builder->_assert_arg_node_type( 'build_dmanip_call_sroutine', 
 		'STMT_NODE', ['routine_stmt'], $rtn_stmt_node );
-	my $sroutine = $rtn_stmt_node->get_enumerated_attribute( 'call_sroutine' );
+	my $sroutine = $rtn_stmt_node->get_attribute( 'call_sroutine' );
 	my %child_exprs = map { ( 
-			($_->get_enumerated_attribute( 'call_sroutine_cxt' ) || 
-				$_->get_enumerated_attribute( 'call_sroutine_arg' )) => $_ 
+			($_->get_attribute( 'call_sroutine_cxt' ) || 
+				$_->get_attribute( 'call_sroutine_arg' )) => $_ 
 		) } @{$rtn_stmt_node->get_child_nodes( 'routine_expr' )};
 	if( $sroutine eq 'RETURN' ) {
 		my $return_value = $builder->build_expr( $child_exprs{'RETURN_VALUE'} );
 		return 'RETURN '.$return_value.';'."\n"; # no parens in standard
 	} elsif( $sroutine eq 'CURSOR_OPEN' ) { # opens a select cursor for reading from (or performs a select if in right context)
 		my $cursor_cx_name = $builder->build_identifier_element( 
-			$child_exprs{'CURSOR_CX'}->get_node_ref_attribute( 'valf_p_routine_item' ) );
+			$child_exprs{'CURSOR_CX'}->get_attribute( 'valf_p_routine_item' ) );
 		return 'OPEN '.$cursor_cx_name.';'."\n";
 	} elsif( $sroutine eq 'CURSOR_CLOSE' ) { # closes a select cursor when you're done with it
 		my $cursor_cx_name = $builder->build_identifier_element( 
-			$child_exprs{'CURSOR_CX'}->get_node_ref_attribute( 'valf_p_routine_item' ) );
+			$child_exprs{'CURSOR_CX'}->get_attribute( 'valf_p_routine_item' ) );
 		return 'CLOSE '.$cursor_cx_name.';'."\n";
 	} elsif( $sroutine eq 'CURSOR_FETCH' ) { # reads a row from an opened cursor and puts it in a row/list variable
 		my $cursor_cx_name = $builder->build_identifier_element( 
-			$child_exprs{'CURSOR_CX'}->get_node_ref_attribute( 'valf_p_routine_item' ) );
+			$child_exprs{'CURSOR_CX'}->get_attribute( 'valf_p_routine_item' ) );
 		my $fetch_orient = ''; # TODO: the explicit <fetch orientation> options; NEXT is default
 		my $query_dest_name = $builder->build_identifier_element( 
-			$child_exprs{'INTO'}->get_node_ref_attribute( 'query_dest' ) );
+			$child_exprs{'INTO'}->get_attribute( 'query_dest' ) );
 		return 'FETCH '.$fetch_orient.' FROM '.$cursor_cx_name.' INTO '.$query_dest_name.';'."\n";
 	} elsif( $sroutine eq 'SELECT' ) { # fetches one row from a table/view and puts it in a row/list variable
-		my $view_node = $child_exprs{'SELECT_DEFN'}->get_node_ref_attribute( 'act_on' );
+		my $view_node = $child_exprs{'SELECT_DEFN'}->get_attribute( 'act_on' );
 		return $builder->build_query_query_spec( $view_node, 
-			$child_exprs{'INTO'}->get_node_ref_attribute( 'query_dest' ) ).';'."\n";
+			$child_exprs{'INTO'}->get_attribute( 'query_dest' ) ).';'."\n";
 	} elsif( $sroutine eq 'INSERT' ) { # inserts a row into a table/view
-		my $view_node = $child_exprs{'INSERT_DEFN'}->get_node_ref_attribute( 'act_on' );
+		my $view_node = $child_exprs{'INSERT_DEFN'}->get_attribute( 'act_on' );
 		return $builder->build_dmanip_insert_stmt( $view_node );
 	} elsif( $sroutine eq 'UPDATE' ) { # updates a row in a table/view
-		my $view_node = $child_exprs{'UPDATE_DEFN'}->get_node_ref_attribute( 'act_on' );
+		my $view_node = $child_exprs{'UPDATE_DEFN'}->get_attribute( 'act_on' );
 		return $builder->build_dmanip_update_stmt( $view_node );
 	} elsif( $sroutine eq 'DELETE' ) { # deletes a row in a table/view
-		my $view_node = $child_exprs{'DELETE_DEFN'}->get_node_ref_attribute( 'act_on' );
+		my $view_node = $child_exprs{'DELETE_DEFN'}->get_attribute( 'act_on' );
 		return $builder->build_dmanip_delete_stmt( $view_node );
 	} elsif( $sroutine eq 'COMMIT' ) { # commits the current transaction, then starts a new one
 		return 'COMMIT; START TRANSACTION;'."\n";
@@ -2142,12 +2142,12 @@ sub build_dmanip_src_schema_object_name {
 	my ($builder, $view_node) = @_;
 	$builder->_assert_arg_node_type( 'build_dmanip_src_schema_object_name', 
 		'VIEW_NODE', ['view'], $view_node );
-	my $view_type = $view_node->get_enumerated_attribute( 'view_type' );
+	my $view_type = $view_node->get_attribute( 'view_type' );
 	my @view_src_nodes = @{$view_node->get_child_nodes( 'view_src' )};
 	if( @view_src_nodes == 0 ) {
 		return; # No source at all.
 	} elsif( $view_type eq 'ALIAS' or @view_src_nodes == 1 ) {
-		my $object_node = $view_src_nodes[0]->get_node_ref_attribute( 'match' );
+		my $object_node = $view_src_nodes[0]->get_attribute( 'match' );
 		if( $object_node->get_primary_parent_attribute()->get_node_type() eq 'schema' ) {
 			# The only source is a schema object, table or named view; use it directly.
 			return $builder->build_identifier_schema_or_app_obj( $object_node );
@@ -2171,13 +2171,13 @@ sub build_dmanip_insert_stmt {
 	$builder->{$PROP_UNWRAP_VIEWS} = 1;
 	my $object_name = $builder->build_dmanip_src_schema_object_name( $view_node );
 	my @set_expr_nodes = 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'SET' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'SET' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	my @set_fields_list = ();
 	my @set_values_list = ();
 	foreach my $expr_node (@set_expr_nodes) {
 		push( @set_fields_list, $builder->build_identifier_element( 
-			$expr_node->get_node_ref_attribute( 'set_src_field' ) ) );
+			$expr_node->get_attribute( 'set_src_field' ) ) );
 		push( @set_values_list, $builder->build_expr( $expr_node ) );
 	}
 	my $insert_fields_and_src = '('.join( ', ', @set_fields_list ).') '.
@@ -2197,12 +2197,12 @@ sub build_dmanip_update_stmt {
 	$builder->{$PROP_UNWRAP_VIEWS} = 1;
 	my $object_name = $builder->build_dmanip_src_schema_object_name( $view_node );
 	my @set_expr_nodes = 
-		grep { $_->get_enumerated_attribute( 'view_part' ) eq 'SET' } 
+		grep { $_->get_attribute( 'view_part' ) eq 'SET' } 
 		@{$view_node->get_child_nodes( 'view_expr' )};
 	my @set_clause_list = ();
 	foreach my $expr_node (@set_expr_nodes) {
 		my $set_target = $builder->build_identifier_element( 
-			$expr_node->get_node_ref_attribute( 'set_src_field' ) );
+			$expr_node->get_attribute( 'set_src_field' ) );
 		my $update_source = $builder->build_expr( $expr_node );
 		push( @set_clause_list, $set_target.' = '.$update_source );
 	}
@@ -2233,16 +2233,16 @@ sub build_dmanip_call_uroutine {
 	my ($builder, $rtn_stmt_node) = @_;
 	$builder->_assert_arg_node_type( 'build_dmanip_call_uroutine', 
 		'STMT_NODE', ['routine_stmt'], $rtn_stmt_node );
-	my $uroutine = $rtn_stmt_node->get_node_ref_attribute( 'call_uroutine' );
+	my $uroutine = $rtn_stmt_node->get_attribute( 'call_uroutine' );
 	my $uroutine_name = $builder->build_identifier_schema_or_app_obj( $uroutine );
 	my %uroutine_arg_exprs = 
-		map { ($_->get_node_ref_attribute( 'call_uroutine_arg' ) => $_) } 
+		map { ($_->get_attribute( 'call_uroutine_arg' )->get_self_id() => $_) } 
 		@{$rtn_stmt_node->get_child_nodes( 'routine_expr' )};
 	# Note: The build_expr() calls are done below to ensure the arg values are 
 	# defined in the same order they are output; this lets optional insertion 
 	# of positionally determined host params (and their mapping) to work right.
 	my $arg_val_list = join( ', ', 
-		map { $uroutine_arg_exprs{$_} ? $builder->build_expr( $uroutine_arg_exprs{$_} ) : 'NULL' } 
+		map { $uroutine_arg_exprs{$_->get_self_id()} ? $builder->build_expr( $uroutine_arg_exprs{$_->get_self_id()} ) : 'NULL' } 
 		@{$uroutine->get_child_nodes( 'routine_arg' )} );
 	# <call statement> ::= CALL <routine invocation>
 	return 'CALL '.$uroutine_name.($arg_val_list ? '('.$arg_val_list.')' : '').';'."\n";
@@ -2262,7 +2262,7 @@ sub substitute_macros {
 
 sub find_scalar_domain_for_row_domain_field {
 	my ($builder, $scalar_data_type_node, $row_domain_node) = @_;
-	my @candidates = grep { $_->get_node_ref_attribute( 'data_type' ) eq $scalar_data_type_node } 
+	my @candidates = grep { $_->get_attribute( 'data_type' )->get_self_id() eq $scalar_data_type_node->get_self_id() } 
 		@{$row_domain_node->get_primary_parent_attribute()->get_child_nodes( 'scalar_domain' )};
 	return $candidates[0] || $scalar_data_type_node;
 }
@@ -2272,9 +2272,9 @@ sub find_scalar_domain_for_row_domain_field {
 sub _scalar_data_type_of_node {
 	my ($builder, $child_node, $atnm) = @_;
 	$atnm ||= 'scalar_data_type';
-	my $dt_or_dom_node = $child_node->get_node_ref_attribute( $atnm );
+	my $dt_or_dom_node = $child_node->get_attribute( $atnm );
 	if( $dt_or_dom_node->get_node_type() eq 'scalar_domain' ) {
-		$dt_or_dom_node = $dt_or_dom_node->get_node_ref_attribute( 'data_type' );
+		$dt_or_dom_node = $dt_or_dom_node->get_attribute( 'data_type' );
 	}
 	return $dt_or_dom_node;
 }
@@ -2282,9 +2282,9 @@ sub _scalar_data_type_of_node {
 sub _row_data_type_of_node {
 	my ($builder, $child_node, $atnm) = @_;
 	$atnm ||= 'row_data_type';
-	my $dt_or_dom_node = $child_node->get_node_ref_attribute( $atnm );
+	my $dt_or_dom_node = $child_node->get_attribute( $atnm );
 	if( $dt_or_dom_node->get_node_type() eq 'row_domain' ) {
-		$dt_or_dom_node = $dt_or_dom_node->get_node_ref_attribute( 'data_type' );
+		$dt_or_dom_node = $dt_or_dom_node->get_attribute( 'data_type' );
 	}
 	return $dt_or_dom_node;
 }
@@ -2293,7 +2293,7 @@ sub _row_domain_of_node {
 	# returns domain or nothing
 	my ($builder, $child_node, $atnm) = @_;
 	$atnm ||= 'row_data_type';
-	my $dt_or_dom_node = $child_node->get_node_ref_attribute( $atnm );
+	my $dt_or_dom_node = $child_node->get_attribute( $atnm );
 	$dt_or_dom_node->get_node_type() eq 'row_domain' and return $dt_or_dom_node;
 	return;
 }
@@ -2315,7 +2315,11 @@ sub _throw_error_message {
 
 sub _assert_arg_node_type {
 	my ($builder, $meth_name, $arg_name, $exp_node_types, $arg_value) = @_;
-	unless( ref($arg_value) eq 'SQL::Routine::Node' ) {
+	unless( defined( $arg_value ) ) {
+		$builder->_throw_error_message( 'SRT_SB_METH_ARG_UNDEF', 
+			{ 'METH' => $meth_name, 'ARGNM' => $arg_name } );
+	}
+	unless( ref($arg_value) and UNIVERSAL::isa( $arg_value, 'SQL::Routine::Node' ) ) {
 		$builder->_throw_error_message( 'SRT_SB_METH_ARG_NO_NODE', 
 			{ 'METH' => $meth_name, 'ARGNM' => $arg_name, 'ARGVL' => $arg_value } );
 	}
@@ -2354,16 +2358,16 @@ alternate SQL dialect that particular database products either require or
 prefer for use.  
 
 SQL::Routine::SQLBuilder is designed to implement common functionality for
-multiple Rosetta Engine classes (such as Rosetta::Engine::Generic) allowing
-them to focus more on the non-SQL specific aspects of their work.  A Rosetta
-Engine would typically invoke this class within its prepare() implementation
-methods.  This class can also be used by code on the application-side of a
-Rosetta::Interface tree; for example, a module that emulates an older database
-interface which wants to return schema dumps as SQL strings ('create'
-statements usually) can use this module to generate those.  (For your
-reference, see also the SQL::Routine::SQLParser module, which implements
-the inverse functionality to SQLBuilder, and is used in both of the same
-places.)
+multiple Rosetta Engine classes (such as Rosetta::Engine::Generic) allowing them
+to focus more on the non-SQL specific aspects of their work.  A Rosetta Engine
+would typically invoke this class within its prepare() implementation methods. 
+This class can also be used by code on the application-side of a
+Rosetta::Interface tree (such as Rosetta::Emulator::DBI); for example, a module
+that emulates an older database interface which wants to return schema dumps as
+SQL strings ('create' statements usually) can use this module to generate those.
+(For your reference, see also the SQL::Routine::SQLParser module, which
+implements the inverse functionality to SQLBuilder, and is used in both of the
+same places.)
 
 SQL::Routine::SQLBuilder has no dependence on any database link products or
 libraries.  You would, for example, use it in exactly the same way (probably)
@@ -2379,9 +2383,9 @@ I<CAVEAT:  SIGNIFICANT PORTIONS OF THIS MODULE ARE NOT WRITTEN YET.  MOREOVER,
 MOST PARTS OF THIS MODULE HAVE NOT BEEN EXECUTED YET AND THEY PROBABLY CONTAIN
 MANY ERRORS.  ALL THAT IS KNOWN FOR SURE WITH THOSE PARTS IS THAT THEY COMPILE.>
 
-=head1 CONSTRUCTOR FUNCTIONS AND METHODS
+=head1 CONSTRUCTOR FUNCTIONS
 
-This function/method is stateless and can be invoked off of either this
+This function is stateless and can be invoked off of either this
 module's name or an existing module object, with the same result.
 
 =head2 new()
@@ -2431,12 +2435,13 @@ set to that value.  If this property is 'YD_CS' (the default), then this object
 will generate SQL identifiers (such as table or column or schema names) that are
 delimited, case-sensitive, and able to contain any characters (including
 whitespace).  If this property is 'ND_CI_UP', then generated SQL identifiers
-will be non-delimited, case-insensitive, folded to uppercase, and contain only a
-limited range of characters such as: letters, underscore, numbers (non-leading).
- The 'ND_CI_DN' style is the same as 'ND_CI_UP' except that the identifier is
-folded to lowercase.  Note that all of these formats are supported by the SQL
-standard but that the standard specifies all non-delimited identifiers will
-match as uppercase when compared to delimited identifiers.
+will be non-delimited, case-insensitive, with latin characters folded to
+uppercase, and contain only a limited range of characters such as: letters,
+underscore, numbers (non-leading); these are "bare-word" identifiers.  The
+'ND_CI_DN' style is the same as 'ND_CI_UP' except that the identifier is folded
+to lowercase.  Note that all of these formats are supported by the SQL standard
+but that the standard specifies all non-delimited identifiers will match as
+uppercase when compared to delimited identifiers.
 
 =head2 identifier_delimiting_char([ NEW_VALUE ])
 
@@ -3356,6 +3361,7 @@ parts of it will be changed in the near future, perhaps in incompatible ways.
 =head1 SEE ALSO
 
 L<perl(1)>, L<SQL::Routine::SQLBuilder::L::en>, L<Locale::KeyedText>,
-L<SQL::Routine>, L<SQL::Routine::SQLParser>, L<Rosetta::Engine::Generic>.
+L<SQL::Routine>, L<SQL::Routine::SQLParser>, L<Rosetta::Engine::Generic>,
+L<Rosetta::Emulator::DBI>.
 
 =cut

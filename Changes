@@ -1,3 +1,43 @@
+                       SQL-Routine-SQLBuilder
+----------------------------------------------------------------------
+
+2005-09-01   Darren Duncan <perl@DarrenDuncan.net>
+
+	* SQL-Routine-SQLBuilder Release 0.20.
+
+	* New code file versions are: SQLBuilder.pm v0.20.
+
+	* Updated external dependencies on SQL::Routine to v0.69.
+
+	* Added a new main title to this Changes file that matches the ReadMe file.
+
+	* Rewrote the documentation section KEEPING UP TO DATE in the ReadMe file.
+
+	* Updated SQLBuilder.pm to retain compatability with changes made in
+	SQL::Routine v0.66; one can no longer straight compare two SRT Node or
+	Container objects to determine their equivalence, since they are now
+	interfaces over a shared storage object.  Updated these 7 SQLBuilder.pm
+	methods to use the new SQL::Routine method get_self_id() instead of the
+	straight comparisons: build_expr_call_uroutine(),
+	build_query_table_factor(), build_query_select_list(),
+	build_query_subquery(), build_schema_or_app_table_create(),
+	build_dmanip_call_uroutine(), find_scalar_domain_for_row_domain_field().
+
+	* Updated these 2 methods to fix bugs in their input checking:
+	set_data_type_customizations(), _assert_arg_node_type().
+
+	* Minor SQLBuilder.pm documentation update so that any Perl subs which were
+	referred to as "function/method" etc are now simply "function".
+
+	* Updated identifier_style() documentation to be easier to understand.
+
+	* Minor DESCRIPTION documentation update.
+
+	* Updated SQLBuilder.pm to retain compatability with changes made in
+	SQL::Routine v0.69; replaced all invocations of the Node methods
+	[get|clear|set]_[literal|enumerated|node_ref]_attribute[|s]() with
+	invocations of [get|clear_set]_attribute[|s]().
+
 2005-06-23   Darren Duncan <perl@DarrenDuncan.net>
 
 	* SQL-Routine-SQLBuilder Release 0.19.

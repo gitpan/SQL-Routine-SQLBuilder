@@ -6,7 +6,7 @@ use Test::More 0.47;
 plan( 'tests' => 9 );
 
 use_ok( 'SQL::Routine::SQLBuilder' );
-cmp_ok( $SQL::Routine::SQLBuilder::VERSION, '==', 0.19, "SQL::Routine::SQLBuilder is the correct version" );
+cmp_ok( $SQL::Routine::SQLBuilder::VERSION, '==', 0.20, "SQL::Routine::SQLBuilder is the correct version" );
 
 use_ok( 'SQL::Routine::SQLBuilder::L::en' );
 cmp_ok( $SQL::Routine::SQLBuilder::L::en::VERSION, '==', 0.01, "SQL::Routine::SQLBuilder::L::en is the correct version" );

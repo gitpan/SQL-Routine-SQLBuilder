@@ -2,7 +2,7 @@
 use 5.008001; use utf8; use strict; use warnings;
 
 # This module is used when testing SQL::Routine::SQLBuilder.
-# It contains some utility methods used by the various SRT_*.t scripts.
+# It contains some utility methods used by the various SRT_SB_*.t scripts.
 
 package # hide this class name from PAUSE indexer
 t_SRT_SB_Util;
