@@ -9,8 +9,8 @@ CONTENTS
 * Keeping Up To Date
 * Dependencies
 * Support
-* Credits
-* Copyright And License
+* License And Copyright
+* Acknowledgements
 
 PREFACE
 
@@ -49,18 +49,18 @@ server, at "http://www.DarrenDuncan.net/d/perl/archives/".
 
 DEPENDENCIES
 
-Perl Version: 5.008001
+This distribution requires any version of Perl 5.x.y that is at least 5.8.1.
 
-Core Modules:
+It also requires the Perl modules 'version' and 'only', which would
+conceptually be built-in to Perl, but aren't, so they are on CPAN instead.
 
-	Test::More 0.47 (but only for the test suite)
+It also requires these modules that are on CPAN:
 
-Non-Core Modules: 
+    Locale::KeyedText 1.6.0 (for error messages)
+    SQL::Routine 0.70.0
 
-	Locale::KeyedText 1.05 (for error messages)
-	SQL::Routine 0.69
-
-This module doesn't require anything else.
+This distribution also requires Test::More for its test suite, and that module
+is bundled with Perl.
 
 SUPPORT
 
@@ -69,11 +69,7 @@ or otherwise.  Feel free to ask me if you can't figure things out on your own, o
 another person whom you know has used this.  I may start a mailing list for 
 support issues later, so that users of my modules can help each other with them.
 
-CREDITS
-
-None besides myself so far.
-
-COPYRIGHT AND LICENSE
+LICENCE AND COPYRIGHT
 
 This file is part of the SQL::Routine::SQLBuilder reference implementation of a
 SQL:2003 string builder that uses the SQL::Routine database portability library.
@@ -117,6 +113,10 @@ SQL::Routine::SQLBuilder would appreciate being informed any time you create a
 modified version of SQL::Routine::SQLBuilder that you are willing to distribute,
 because that is a practical way of suggesting improvements to the standard
 version.
+
+ACKNOWLEDGEMENTS
+
+None besides myself so far.
 
 FIN
 

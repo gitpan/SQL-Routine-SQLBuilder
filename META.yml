@@ -1,13 +1,15 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         SQL-Routine-SQLBuilder
-version:      0.20
+version:      v0.21.0
 version_from: lib/SQL/Routine/SQLBuilder.pm
 installdirs:  site
 requires:
-    Locale::KeyedText:             1.05
-    SQL::Routine:                  0.69
-    Test::More:                    0.47
+    Locale::KeyedText:             1.6.0
+    only:                          0
+    SQL::Routine:                  0.70.0
+    Test::More:                    0
+    version:                       0
 
 distribution_type: module
 generated_by: ExtUtils::MakeMaker version 6.17
