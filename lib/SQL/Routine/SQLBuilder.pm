@@ -2,7 +2,7 @@
 use 5.008001; use utf8; use strict; use warnings;
 
 package SQL::Routine::SQLBuilder;
-use version; our $VERSION = qv('0.21.0');
+use version; our $VERSION = qv('0.21.1');
 
 use only 'Locale::KeyedText' => '1.6.0-';
 use only 'SQL::Routine' => '0.70.0-';
@@ -2281,7 +2281,7 @@ SQL::Routine::SQLBuilder - Generate ANSI/ISO SQL:2003 and other SQL variants
 
 =head1 VERSION
 
-This document describes SQL::Routine::SQLBuilder version 0.21.0.
+This document describes SQL::Routine::SQLBuilder version 0.21.1.
 
 =head1 SYNOPSIS
 
@@ -2289,48 +2289,51 @@ I<The previous SYNOPSIS was removed; a new one will be written later.>
 
 =head1 DESCRIPTION
 
-This module is a reference implementation of fundamental SQL::Routine features.
+This module is a reference implementation of fundamental SQL::Routine
+features.
 
 The SQL::Routine::SQLBuilder Perl 5 module is a functional but quickly
-built SQL::Routine utility class that converts a set of related SQL::Routine
-Nodes into one or more SQL strings that are ready to give as input to a
-particular SQL relational database management system.  This class will by
-default produce SQL that is compliant with the ANSI/ISO SQL:2003 (or 1999 or
-1992) standard, which should be useable as-is with most database products.  In
-addition, this class takes arguments that let you vary the SQL output to an
-alternate SQL dialect that particular database products either require or
-prefer for use.  
+built SQL::Routine utility class that converts a set of related
+SQL::Routine Nodes into one or more SQL strings that are ready to give as
+input to a particular SQL relational database management system.  This
+class will by default produce SQL that is compliant with the ANSI/ISO
+SQL:2003 (or 1999 or 1992) standard, which should be useable as-is with
+most database products.  In addition, this class takes arguments that let
+you vary the SQL output to an alternate SQL dialect that particular
+database products either require or prefer for use.
 
 SQL::Routine::SQLBuilder is designed to implement common functionality for
-multiple Rosetta Engine classes (such as Rosetta::Engine::Generic) allowing them
-to focus more on the non-SQL specific aspects of their work.  A Rosetta Engine
-would typically invoke this class within its prepare() implementation methods. 
-This class can also be used by code on the application-side of a
-Rosetta::Interface tree (such as Rosetta::Emulator::DBI); for example, a module
-that emulates an older database interface which wants to return schema dumps as
-SQL strings ('create' statements usually) can use this module to generate those.
-(For your reference, see also the SQL::Routine::SQLParser module, which
-implements the inverse functionality to SQLBuilder, and is used in both of the
-same places.)
+multiple Rosetta Engine classes (such as Rosetta::Engine::Generic) allowing
+them to focus more on the non-SQL specific aspects of their work.  A
+Rosetta Engine would typically invoke this class within its prepare()
+implementation methods. This class can also be used by code on the
+application-side of a Rosetta::Interface tree (such as
+Rosetta::Emulator::DBI); for example, a module that emulates an older
+database interface which wants to return schema dumps as SQL strings
+('create' statements usually) can use this module to generate those. (For
+your reference, see also the SQL::Routine::SQLParser module, which
+implements the inverse functionality to SQLBuilder, and is used in both of
+the same places.)
 
 SQL::Routine::SQLBuilder has no dependence on any database link products or
-libraries.  You would, for example, use it in exactly the same way (probably)
-when generating SQL for an Oracle database regardless of whether the Engine is
-employing ODBC or SQL*Net as the pipe over which the SQL is sent.  That said,
-it does have specific support for the DBI module's standard way of indicating
-run-time SQL host parameters / bind variables (using a '?' for each instance);
-since DBI's arguments are positional and SQL::Routine's are named, this
-class will also return a map for the SQL that says what order to give the named
-values to DBI.
+libraries.  You would, for example, use it in exactly the same way
+(probably) when generating SQL for an Oracle database regardless of whether
+the Engine is employing ODBC or SQL*Net as the pipe over which the SQL is
+sent.  That said, it does have specific support for the DBI module's
+standard way of indicating run-time SQL host parameters / bind variables
+(using a '?' for each instance); since DBI's arguments are positional and
+SQL::Routine's are named, this class will also return a map for the SQL
+that says what order to give the named values to DBI.
 
-I<CAVEAT:  SIGNIFICANT PORTIONS OF THIS MODULE ARE NOT WRITTEN YET.  MOREOVER,
-MOST PARTS OF THIS MODULE HAVE NOT BEEN EXECUTED YET AND THEY PROBABLY CONTAIN
-MANY ERRORS.  ALL THAT IS KNOWN FOR SURE WITH THOSE PARTS IS THAT THEY COMPILE.>
+I<CAVEAT:  SIGNIFICANT PORTIONS OF THIS MODULE ARE NOT WRITTEN YET. 
+MOREOVER, MOST PARTS OF THIS MODULE HAVE NOT BEEN EXECUTED YET AND THEY
+PROBABLY CONTAIN MANY ERRORS.  ALL THAT IS KNOWN FOR SURE WITH THOSE PARTS
+IS THAT THEY COMPILE.>
 
 =head1 CONSTRUCTOR FUNCTIONS
 
-This function is stateless and can be invoked off of either this
-module's name or an existing module object, with the same result.
+This function is stateless and can be invoked off of either this module's
+name or an existing module object, with the same result.
 
 =head2 new()
 
@@ -2339,32 +2342,34 @@ module's name or an existing module object, with the same result.
 
 This "getter" function/method will create and return a single
 SQL::Routine::SQLBuilder (or subclass) object.  All of this object's
-properties are set to default values that should cause the object to generate
-SQL in a SQL:2003 standard conforming manner.
+properties are set to default values that should cause the object to
+generate SQL in a SQL:2003 standard conforming manner.
 
 =head1 STATIC CONFIGURATION PROPERTY ACCESSOR METHODS
 
-These methods are stateful and can only be invoked from this module's objects. 
-This set of properties are generally set once at the start of a SQLBuilder
-object's life and aren't changed later, since they are generally static
-configuration data.
+These methods are stateful and can only be invoked from this module's
+objects. This set of properties are generally set once at the start of a
+SQLBuilder object's life and aren't changed later, since they are generally
+static configuration data.
 
 =head2 positional_host_params([ NEW_VALUE ])
 
     my $old_val = $builder->positional_host_params();
     $builder->positional_host_params( 1 );
 
-This getter/setter method returns this object's "positional host params" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  If this property is false (the default), then any SQL this
-object makes will include host parameter declarations in named format; eg:
-":FOO" and ":BAR".  If this property is true, then host parameters are declared
-in positional format; they will all be "?" (as the DBI module specifies), and
-the SQL-making method will also return an array ref with maps host parameter
-names to the positional "?" in the new SQL.  This property simply indicates the
-database engine's capability; it does not say "act now".  The "positional host
-param map array" property can be set regardless of the engine's capability, but
-SQLBuilder code will only do something with it if "positional host params" is true.
+This getter/setter method returns this object's "positional host params"
+boolean property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  If this property is false (the
+default), then any SQL this object makes will include host parameter
+declarations in named format; eg: ":FOO" and ":BAR".  If this property is
+true, then host parameters are declared in positional format; they will all
+be "?" (as the DBI module specifies), and the SQL-making method will also
+return an array ref with maps host parameter names to the positional "?" in
+the new SQL.  This property simply indicates the database engine's
+capability; it does not say "act now".  The "positional host param map
+array" property can be set regardless of the engine's capability, but
+SQLBuilder code will only do something with it if "positional host params"
+is true.
 
 =head2 identifier_style([ NEW_VALUE ])
 
@@ -2374,66 +2379,69 @@ SQLBuilder code will only do something with it if "positional host params" is tr
     $builder->identifier_style( 'ND_CI_DN' );
 
 This getter/setter method returns this object's "identifier style" string
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  If this property is 'YD_CS' (the default), then this object
-will generate SQL identifiers (such as table or column or schema names) that are
-delimited, case-sensitive, and able to contain any characters (including
-whitespace).  If this property is 'ND_CI_UP', then generated SQL identifiers
-will be non-delimited, case-insensitive, with latin characters folded to
-uppercase, and contain only a limited range of characters such as: letters,
-underscore, numbers (non-leading); these are "bare-word" identifiers.  The
-'ND_CI_DN' style is the same as 'ND_CI_UP' except that the identifier is folded
-to lowercase.  Note that all of these formats are supported by the SQL standard
-but that the standard specifies all non-delimited identifiers will match as
-uppercase when compared to delimited identifiers.
+property; if the optional NEW_VALUE argument is defined, this property is
+first set to that value.  If this property is 'YD_CS' (the default), then
+this object will generate SQL identifiers (such as table or column or
+schema names) that are delimited, case-sensitive, and able to contain any
+characters (including whitespace).  If this property is 'ND_CI_UP', then
+generated SQL identifiers will be non-delimited, case-insensitive, with
+latin characters folded to uppercase, and contain only a limited range of
+characters such as: letters, underscore, numbers (non-leading); these are
+"bare-word" identifiers.  The 'ND_CI_DN' style is the same as 'ND_CI_UP'
+except that the identifier is folded to lowercase.  Note that all of these
+formats are supported by the SQL standard but that the standard specifies
+all non-delimited identifiers will match as uppercase when compared to
+delimited identifiers.
 
 =head2 identifier_delimiting_char([ NEW_VALUE ])
 
     my $old_val = $builder->identifier_delimiting_char();
     $builder->identifier_delimiting_char( '`' );
 
-This getter/setter method returns this object's "identifier delimiting char"
-scalar property; if the optional NEW_VALUE argument is defined, this property
-is first set to that value.  When the "identifier style" property is 'YD_CS',
-then "identifier delimiting char" defines what character to delimit identifiers
-with.  The double-quote (") is used by default, as it is given by example in
-the SQL standard and many databases such as Oracle support it; however, a
-commonly used alternative is the back-tick (`), such as MySQL supports.  You
-may use any delimiter you want by setting this property to it.  Note that any
-occurance of your chosen delimiter in the actual identifier name will be
-escaped in generated SQL by way of a double occurance (eg: '"' becomes '""').
+This getter/setter method returns this object's "identifier delimiting
+char" scalar property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  When the "identifier style" property
+is 'YD_CS', then "identifier delimiting char" defines what character to
+delimit identifiers with.  The double-quote (") is used by default, as it
+is given by example in the SQL standard and many databases such as Oracle
+support it; however, a commonly used alternative is the back-tick (`), such
+as MySQL supports.  You may use any delimiter you want by setting this
+property to it.  Note that any occurance of your chosen delimiter in the
+actual identifier name will be escaped in generated SQL by way of a double
+occurance (eg: '"' becomes '""').
 
 =head2 get_data_type_customizations()
 
     my $rh_old_values = $builder->get_data_type_customizations();
 
-This "getter" method returns this object's "data type customizations" family of
-properties in a new hash ref.  The family has 46 members with more likely to be
-added later; see the source code for a list.  Most of the members are used to
-map SQL::Routine qualified data types or domains to RDBMS native data
-types.  As data types is one of the places that RDBMS products are more likely
-to differ from each other, the customization related to them is fine grained in
-SQLBuilder.  The current values either match the 2003 SQL standard or are as
-close to it as possible; often, many members can be kept the same for use with
-particular database products, but often many members will also have to be
-changed for each product.  The next 2 methods are for changing these members.
+This "getter" method returns this object's "data type customizations"
+family of properties in a new hash ref.  The family has 46 members with
+more likely to be added later; see the source code for a list.  Most of the
+members are used to map SQL::Routine qualified data types or domains to
+RDBMS native data types.  As data types is one of the places that RDBMS
+products are more likely to differ from each other, the customization
+related to them is fine grained in SQLBuilder.  The current values either
+match the 2003 SQL standard or are as close to it as possible; often, many
+members can be kept the same for use with particular database products, but
+often many members will also have to be changed for each product.  The next
+2 methods are for changing these members.
 
 =head2 set_data_type_customizations( NEW_VALUES )
 
     $builder->set_data_type_customizations( { 'NUM_INT_8' => 'TINYINT' } );
 
-This "setter" method lets you change one or more member of this object's "data
-type customizations" family of properties; you provide replacements in the
-NEW_VALUES hash ref argument, where the keys match the member name and the
-values are the new values.  Invalid keys will also be added to the member list, 
-but the SQL generating code will ignore them.
+This "setter" method lets you change one or more member of this object's
+"data type customizations" family of properties; you provide replacements
+in the NEW_VALUES hash ref argument, where the keys match the member name
+and the values are the new values.  Invalid keys will also be added to the
+member list, but the SQL generating code will ignore them.
 
 =head2 reset_default_data_type_customizations()
 
     $builder->reset_default_data_type_customizations();
 
-This "setter" method lets you reset all of this object's "data
-type customizations" family of properties to their default values, such as they 
+This "setter" method lets you reset all of this object's "data type
+customizations" family of properties to their default values, such as they
 were when the SQLBuilder object was first created.
 
 =head2 ora_style_seq_usage([ NEW_VALUE ])
@@ -2441,38 +2449,40 @@ were when the SQLBuilder object was first created.
     my $old_val = $builder->ora_style_seq_usage();
     $builder->ora_style_seq_usage( 1 );
 
-This getter/setter method returns this object's "ora style seq usage" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  If this property is false (the default), then sequence
-next-value expressions will have the format 'NEXT VALUE FOR seq-name'; if this
-property is true, they will be 'seq-name.NEXTVAL' instead, as Oracle likes.
+This getter/setter method returns this object's "ora style seq usage"
+boolean property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  If this property is false (the
+default), then sequence next-value expressions will have the format 'NEXT
+VALUE FOR seq-name'; if this property is true, they will be
+'seq-name.NEXTVAL' instead, as Oracle likes.
 
 =head2 ora_style_routines([ NEW_VALUE ])
 
     my $old_val = $builder->ora_style_routines();
     $builder->ora_style_routines( 1 );
 
-This getter/setter method returns this object's "ora style routines" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  If this property is false (the default), then generated
-routine layouts will follow the SQL:2003 standard, meaning that local variables
-are declared inside BEGIN/END blocks using 'DECLARE var-name ...', and value
-assignments take the form 'SET dest-var = src-expr'.  If this property is true,
-then routine layouts will follow the Oracle 8 style where variable declarations
-are above BEGIN/END blocks and assignments are of the form 'dest-var :=
-src-expr'.
+This getter/setter method returns this object's "ora style routines"
+boolean property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  If this property is false (the
+default), then generated routine layouts will follow the SQL:2003 standard,
+meaning that local variables are declared inside BEGIN/END blocks using
+'DECLARE var-name ...', and value assignments take the form 'SET dest-var =
+src-expr'.  If this property is true, then routine layouts will follow the
+Oracle 8 style where variable declarations are above BEGIN/END blocks and
+assignments are of the form 'dest-var := src-expr'.
 
 =head2 inlined_subqueries([ NEW_VALUE ])
 
     my $old_val = $builder->inlined_subqueries();
     $builder->inlined_subqueries( 1 );
 
-This getter/setter method returns this object's "inlined subqueries" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  If this property is false (the default), then query
-expressions will be generated having a "with" clause when any sub-queries have
-names; if this property is true then all sub-queries will be in-lined whether
-they have names or not (since the database engine doesn't support "with").
+This getter/setter method returns this object's "inlined subqueries"
+boolean property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  If this property is false (the
+default), then query expressions will be generated having a "with" clause
+when any sub-queries have names; if this property is true then all
+sub-queries will be in-lined whether they have names or not (since the
+database engine doesn't support "with").
 
 =head2 inlined_domains([ NEW_VALUE ])
 
@@ -2480,12 +2490,12 @@ they have names or not (since the database engine doesn't support "with").
     $builder->inlined_domains( 1 );
 
 This getter/setter method returns this object's "inlined domains" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  If this property is false (the default), then any data
-container declarations like table columns will refer to named domain schema
-objects as their data type; if this property is true then data type definitions
-will always be inlined such as for table column declarations (since the
-database engine doesn't support named domains).
+property; if the optional NEW_VALUE argument is defined, this property is
+first set to that value.  If this property is false (the default), then any
+data container declarations like table columns will refer to named domain
+schema objects as their data type; if this property is true then data type
+definitions will always be inlined such as for table column declarations
+(since the database engine doesn't support named domains).
 
 =head2 flatten_to_single_schema([ NEW_VALUE ])
 
@@ -2493,14 +2503,15 @@ database engine doesn't support named domains).
     $builder->flatten_to_single_schema( 1 );
 
 This getter/setter method returns this object's "flatten to single schema"
-boolean property; if the optional NEW_VALUE argument is defined, this property
-is first set to that value.  If this property is false (the default), then we
-assume that the database engine in use supports multiple named schemas in a
-single catalog, and we are using them; if this property is true then we assume
-the database only supports a single schema per catalog, or the current user is
-only allowed to use a single schema (effectively the same problem), so we will
-flatten all of our schema objects into a single namespace where each object
-name includes the schema name prefixed to it, then emulating multiple schemas.
+boolean property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  If this property is false (the
+default), then we assume that the database engine in use supports multiple
+named schemas in a single catalog, and we are using them; if this property
+is true then we assume the database only supports a single schema per
+catalog, or the current user is only allowed to use a single schema
+(effectively the same problem), so we will flatten all of our schema
+objects into a single namespace where each object name includes the schema
+name prefixed to it, then emulating multiple schemas.
 
 =head2 single_schema_join_chars([ NEW_VALUE ])
 
@@ -2508,32 +2519,34 @@ name includes the schema name prefixed to it, then emulating multiple schemas.
     $builder->single_schema_join_chars( '___' );
 
 This getter/setter method returns this object's "single schema join chars"
-scalar property; if the optional NEW_VALUE argument is defined, this property
-is first set to that value.  When the "flatten to single schema" property is
-true, then "single schema join chars" defines what short character string to
-concatenate the SRT schema name and schema object name with when flattening
-them from two levels to one.  The default value of this property is '__' (a
-double underscore).  It should have a value that is guaranteed to never appear
-in either the schema names or schema object names being joined, so that
-reverse-engineering such a flattened schema into a SRT can be trivial.
+scalar property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  When the "flatten to single schema"
+property is true, then "single schema join chars" defines what short
+character string to concatenate the SRT schema name and schema object name
+with when flattening them from two levels to one.  The default value of
+this property is '__' (a double underscore).  It should have a value that
+is guaranteed to never appear in either the schema names or schema object
+names being joined, so that reverse-engineering such a flattened schema
+into a SRT can be trivial.
 
 =head2 emulate_subqueries([ NEW_VALUE ])
 
     my $old_val = $builder->emulate_subqueries();
     $builder->emulate_subqueries( 1 );
 
-This getter/setter method returns this object's "emulate subqueries" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  If this property is false (the default), then we assume
-that the database engine in use supports sub-queries of some kind, either named
-or inlined, and we are using them; if this property is true then we assume the
-database does not support subqueries at all, and so we will need to emulate
-them using multiple simple or joining queries as well as temporary tables to
-hold intermediate values.  I<Note that the emulator will only support static
-sub-queries for the near future, meaning those that don't take any view_args,
-and that are evaluated exactly once prior to the invoking query.  For that
-matter, some database engines only have native support for static sub-queries
-also, such as SQLite 2.8.13.>
+This getter/setter method returns this object's "emulate subqueries"
+boolean property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  If this property is false (the
+default), then we assume that the database engine in use supports
+sub-queries of some kind, either named or inlined, and we are using them;
+if this property is true then we assume the database does not support
+subqueries at all, and so we will need to emulate them using multiple
+simple or joining queries as well as temporary tables to hold intermediate
+values.  I<Note that the emulator will only support static sub-queries for
+the near future, meaning those that don't take any view_args, and that are
+evaluated exactly once prior to the invoking query.  For that matter, some
+database engines only have native support for static sub-queries also, such
+as SQLite 2.8.13.>
 
 =head2 emulate_compound_queries([ NEW_VALUE ])
 
@@ -2541,41 +2554,43 @@ also, such as SQLite 2.8.13.>
     $builder->emulate_compound_queries( 1 );
 
 This getter/setter method returns this object's "emulate compound queries"
-boolean property; if the optional NEW_VALUE argument is defined, this property
-is first set to that value.  If this property is false (the default), then we
-assume that the database engine in use supports the various compound queries
-(union, intersect, except), and we are using them; if this property is true
-then we assume the database does not support compound queries at all, and so we
-will need to emulate them using multiple simple or joining queries as well as
-temporary tables to hold intermediate values.
+boolean property; if the optional NEW_VALUE argument is defined, this
+property is first set to that value.  If this property is false (the
+default), then we assume that the database engine in use supports the
+various compound queries (union, intersect, except), and we are using them;
+if this property is true then we assume the database does not support
+compound queries at all, and so we will need to emulate them using multiple
+simple or joining queries as well as temporary tables to hold intermediate
+values.
 
 =head2 emulated_query_temp_table_join_chars([ NEW_VALUE ])
 
     my $old_val = $builder->emulated_query_temp_table_join_chars();
     $builder->emulated_query_temp_table_join_chars( '___' );
 
-This getter/setter method returns this object's "emulated query temp table join
-chars" scalar property; if the optional NEW_VALUE argument is defined, this
-property is first set to that value.  When either or both of the "emulate
-subqueries" or "emulate compound queries" properties are true, then "emulated
-query temp table join chars" defines what short character string to concatenate
-the parts of the names of each temporary table used by the emulation to hold
-intermediate values.  Given that "inner views" used in subquery or compound
-query definitions are declared inside the main view and/or each other, each
-temporary table name is the concatenation of the names of the inner view being
-invoked and each of its parent views, parent-most on the left.  The default
-value of this property is '__' (a double underscore).  So, for example, a
-parent view named 'foo' having an inner view named 'bar' will produce a
-temporary table named 'foo__bar' when an emulation happens.
+This getter/setter method returns this object's "emulated query temp table
+join chars" scalar property; if the optional NEW_VALUE argument is defined,
+this property is first set to that value.  When either or both of the
+"emulate subqueries" or "emulate compound queries" properties are true,
+then "emulated query temp table join chars" defines what short character
+string to concatenate the parts of the names of each temporary table used
+by the emulation to hold intermediate values.  Given that "inner views"
+used in subquery or compound query definitions are declared inside the main
+view and/or each other, each temporary table name is the concatenation of
+the names of the inner view being invoked and each of its parent views,
+parent-most on the left.  The default value of this property is '__' (a
+double underscore).  So, for example, a parent view named 'foo' having an
+inner view named 'bar' will produce a temporary table named 'foo__bar' when
+an emulation happens.
 
 =head1 DYNAMIC STATE MAINTENANCE PROPERTY ACCESSOR METHODS
 
-These methods are stateful and can only be invoked from this module's objects.
-Each of these contains either very short term configuration options (meant to
-have the life of about one external build* method call) that are only set
-externally as usual, or some may also be set or changed by SQLBuilder code, and
-can be used effectively as extra output from the build* method; they maintain
-state for a build* invocation.
+These methods are stateful and can only be invoked from this module's
+objects. Each of these contains either very short term configuration
+options (meant to have the life of about one external build* method call)
+that are only set externally as usual, or some may also be set or changed
+by SQLBuilder code, and can be used effectively as extra output from the
+build* method; they maintain state for a build* invocation.
 
 =head2 make_host_params([ NEW_VALUE ])
 
@@ -2583,33 +2598,36 @@ state for a build* invocation.
     $builder->make_host_params( 1 );
 
 This getter/setter method returns this object's "make host params" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  This property helps manage the fact that routine_arg SRT
-Nodes can have dual purposes when being converted to SQL.  With an ordinary
-stored routine, they turn into normal argument declarations and are used by SQL
-routine code by name as usual.  With an application-side routine, or BLOCKs inside
-those, they instead represent application host parameters, which are formatted
-differently when put in SQL.  This property stores the current state as to
-whether any referenced routine_arg should be turned into host params or not. 
-This property should be set false (the default) when we are in an ordinary
-routine, and it should be set true when we are in an application-side routine.
+property; if the optional NEW_VALUE argument is defined, this property is
+first set to that value.  This property helps manage the fact that
+routine_arg SRT Nodes can have dual purposes when being converted to SQL. 
+With an ordinary stored routine, they turn into normal argument
+declarations and are used by SQL routine code by name as usual.  With an
+application-side routine, or BLOCKs inside those, they instead represent
+application host parameters, which are formatted differently when put in
+SQL.  This property stores the current state as to whether any referenced
+routine_arg should be turned into host params or not. This property should
+be set false (the default) when we are in an ordinary routine, and it
+should be set true when we are in an application-side routine.
 
 =head2 get_positional_host_param_map_array()
 
 This "getter" method returns a new array ref having a copy of this object's
-"positional host param map array" array property.  This property is explicitely
-emptied by external code, by invoking the clear_positional_host_param_map_array()
-method, prior to that code requesting that we build SQL which contains
-positional host parameters.  When we build said SQL, each time we are to insert
-a host parameter, we simply put a "?" in the SQL, and we add to this array the
-name of the routine_arg whose value is supposed to substitute at exec time. As
-soon as said SQL is made and returned, external code reads this array's values
+"positional host param map array" array property.  This property is
+explicitely emptied by external code, by invoking the
+clear_positional_host_param_map_array() method, prior to that code
+requesting that we build SQL which contains positional host parameters. 
+When we build said SQL, each time we are to insert a host parameter, we
+simply put a "?" in the SQL, and we add to this array the name of the
+routine_arg whose value is supposed to substitute at exec time. As soon as
+said SQL is made and returned, external code reads this array's values
 using the get_positional_host_param_map_array() method.
 
 =head2 clear_positional_host_param_map_array()
 
-This "setter" method empties this object's "positional host param map array"
-array property.  See the previous method's documentation for when to use it.
+This "setter" method empties this object's "positional host param map
+array" array property.  See the previous method's documentation for when to
+use it.
 
 =head2 unwrap_views([ NEW_VALUE ])
 
@@ -2617,72 +2635,78 @@ array property.  See the previous method's documentation for when to use it.
     $builder->unwrap_views( 1 );
 
 This getter/setter method returns this object's "unwrap views" boolean
-property; if the optional NEW_VALUE argument is defined, this property is first
-set to that value.  This property helps manage the fact that when we are making
-INSERT or UPDATE or DELETE statements, these operate on a single table or named
-view by its original (not correlation) name.  The outer view that stores the
-details of the I|U|D is "unwrapped".  This property stores the current state as
-to whether any view_src_field should be referenced by their original names or
-not; false (the default) means to use the correlation name, and true means to
-use the original.  External code which is working with I|U|D statements, or
-several functions in this module, would set this true before calling this
-module's generic SQL making functions, and then set it false just afterwards.  
+property; if the optional NEW_VALUE argument is defined, this property is
+first set to that value.  This property helps manage the fact that when we
+are making INSERT or UPDATE or DELETE statements, these operate on a single
+table or named view by its original (not correlation) name.  The outer view
+that stores the details of the I|U|D is "unwrapped".  This property stores
+the current state as to whether any view_src_field should be referenced by
+their original names or not; false (the default) means to use the
+correlation name, and true means to use the original.  External code which
+is working with I|U|D statements, or several functions in this module,
+would set this true before calling this module's generic SQL making
+functions, and then set it false just afterwards.
 
 =head1 SQL LEXICAL ELEMENT CONSTRUCTION METHODS
 
-These "getter" methods each do trivial SQL construction; each one returns what
-amounts to a single 'token', such as a formatted identifier name or a quoted
-literal value.  Typically these are only called by other SQL making functions.
-See the subsections of SQL:2003 Foundation section 5 "Lexical elements" (p131).
+These "getter" methods each do trivial SQL construction; each one returns
+what amounts to a single 'token', such as a formatted identifier name or a
+quoted literal value.  Typically these are only called by other SQL making
+functions. See the subsections of SQL:2003 Foundation section 5 "Lexical
+elements" (p131).
 
 =head2 quote_literal( LITERAL, BASE_TYPE )
 
     my $quoted = $builder->quote_literal( "can't you come?", 'STR_CHAR' );
     # Function returns "'can''t you come?'".
 
-This method takes a literal scalar value in the argument LITERAL and returns a
-quoted and/or escaped version of it, according to the rules of the SRT simple
-data type specified in BASE_TYPE.  This method is a wrapper for the other
-quote_*_literal( LITERAL ) methods, with BASE_TYPE determining which to call.
+This method takes a literal scalar value in the argument LITERAL and
+returns a quoted and/or escaped version of it, according to the rules of
+the SRT simple data type specified in BASE_TYPE.  This method is a wrapper
+for the other quote_*_literal( LITERAL ) methods, with BASE_TYPE
+determining which to call.
 
 =head2 quote_char_string_literal( LITERAL )
 
     my $quoted = $builder->quote_char_string_literal( "Perl" );
     # Function returns "'Perl'".
 
-This method takes a literal scalar value in the argument LITERAL and returns a 
-quoted and/or escaped version of it, as a character string.
+This method takes a literal scalar value in the argument LITERAL and
+returns a quoted and/or escaped version of it, as a character string.
 
 =head2 quote_bin_string_literal( LITERAL )
 
     my $quoted = $builder->quote_char_string_literal( "Perl" );
     # Function returns "B'01010000011001010111001001101100'".
 
-This method takes a literal scalar value in the argument LITERAL and returns a
-quoted and/or escaped version of it, as a binary-digit string.  Note that
-quote_literal() never calls this for binary literals, but rather 'hex'.
+This method takes a literal scalar value in the argument LITERAL and
+returns a quoted and/or escaped version of it, as a binary-digit string. 
+Note that quote_literal() never calls this for binary literals, but rather
+'hex'.
 
 =head2 quote_hex_string_literal( LITERAL )
 
     my $quoted = $builder->quote_char_string_literal( "Perl" );
     # Function returns "X'5065726C'".
 
-This method takes a literal scalar value in the argument LITERAL and returns a 
-quoted and/or escaped version of it, as a hex-digit (or hexit) string.
+This method takes a literal scalar value in the argument LITERAL and
+returns a quoted and/or escaped version of it, as a hex-digit (or hexit)
+string.
 
 =head2 quote_integer_literal( LITERAL )
 
     my $quoted = $builder->quote_integer_literal( 54 );
 
-This method takes a literal scalar value in the argument LITERAL and returns a 
-quoted and/or escaped version of it, as an integer.
+This method takes a literal scalar value in the argument LITERAL and
+returns a quoted and/or escaped version of it, as an integer.
 
 =head2 quote_numeric_literal( LITERAL )
 
     my $quoted = $builder->quote_numeric_literal( 7.53 );
 
-This method takes a literal scalar value in the argument LITERAL and returns a 
-quoted and/or escaped version of it, as a numeric of arbitrary scale.
+This method takes a literal scalar value in the argument LITERAL and
+returns a quoted and/or escaped version of it, as a numeric of arbitrary
+scale.
 
 =head2 quote_boolean_literal( LITERAL )
 
@@ -2690,117 +2714,125 @@ quoted and/or escaped version of it, as a numeric of arbitrary scale.
     my $false = $builder->quote_boolean_literal( 0 );
     my $unknown = $builder->quote_boolean_literal( undef );
 
-This method takes a literal scalar value in the argument LITERAL and returns a
-quoted and/or escaped version of it, as a boolean value.  By default the
-returned values are bare-words of either [TRUE, FALSE, UNKNOWN] in accordance
-with the SQL:2003 standard; however, if the "data type customizations" element
-called 'BOOL_USE_NUMS' is set to true, then [1, 0, NULL] are returned instead.
+This method takes a literal scalar value in the argument LITERAL and
+returns a quoted and/or escaped version of it, as a boolean value.  By
+default the returned values are bare-words of either [TRUE, FALSE, UNKNOWN]
+in accordance with the SQL:2003 standard; however, if the "data type
+customizations" element called 'BOOL_USE_NUMS' is set to true, then [1, 0,
+NULL] are returned instead.
 
 =head2 quote_identifier( NAME )
 
     my $quoted = $builder->quote_identifier( 'my_data' );
     my $quoted2 = $builder->quote_identifier( 'My Data' );
 
-This method takes a raw SQL identifier (such as a table or column name) in NAME
-and returns an appropriately formatted version, taking into account the current
-object's "delimited identifiers" and "identifier delimiting char" properties.  
-This function only works on un-qualified identifiers; to quote a qualified 
-identifier, pass each piece here separately, and join with "." afterwards.
+This method takes a raw SQL identifier (such as a table or column name) in
+NAME and returns an appropriately formatted version, taking into account
+the current object's "delimited identifiers" and "identifier delimiting
+char" properties. This function only works on un-qualified identifiers; to
+quote a qualified identifier, pass each piece here separately, and join
+with "." afterwards.
 
 =head2 build_identifier_element( OBJECT_NODE )
 
     my $sql = $builder->build_identifier_element( $object_node );
 
 This method takes a SQL::Routine::Node object in OBJECT_NODE, extracts its
-'si_name' attribute, and returns that after passing it to quote_identifier().  The
-result is an "unqualified identifier".  This is the most widely used, at least
-internally, build_identifier_*() method; for example, it is used for table/view
-column names in table/view definitions, and for all declaration or use of
-routine variables, or for routine/view arguments.  Note that SQL::Routine
-will throw an exception if the Node argument is of the wrong type.
+'si_name' attribute, and returns that after passing it to
+quote_identifier().  The result is an "unqualified identifier".  This is
+the most widely used, at least internally, build_identifier_*() method; for
+example, it is used for table/view column names in table/view definitions,
+and for all declaration or use of routine variables, or for routine/view
+arguments.  Note that SQL::Routine will throw an exception if the Node
+argument is of the wrong type.
 
 =head2 build_identifier_host_parameter_name( ROUTINE_ARG_NODE )
 
     my $sql = $builder->build_identifier_host_parameter_name( $routine_arg_node );
 
 This method takes a routine_arg SRT Node and generates either a named or
-positional SQL identifier (depending on this object's "positional host params"
-property) based on the "name" of the routine_arg.  This function is used for
-application-side or application-invoked SRT routines.  Named host params look
-according to the SQL:2003 standard, like ":foo", and positional host params
-follow the DBI-style '?' (and also SQL:2003 standard, apparently).  When making
-a positional parameter, this method adds an element to the 'map array'
-property, so it can be externally mapped to a named value later.
+positional SQL identifier (depending on this object's "positional host
+params" property) based on the "name" of the routine_arg.  This function is
+used for application-side or application-invoked SRT routines.  Named host
+params look according to the SQL:2003 standard, like ":foo", and positional
+host params follow the DBI-style '?' (and also SQL:2003 standard,
+apparently).  When making a positional parameter, this method adds an
+element to the 'map array' property, so it can be externally mapped to a
+named value later.
 
 =head2 build_identifier_schema_or_app_obj( OBJECT_NODE[, FOR_DEFN] )
 
     my $sql = $builder->build_identifier_schema_or_app_obj( $object_node );
     my $sql = $builder->build_identifier_schema_or_app_obj( $object_node, 1 );
 
-This method is like build_identifier_element() except that it will generate a
-"qualified identifier", by following parent Nodes of the given Node, and that it
-is specifically for either a permanent schema object (domain, sequence
-generator, table, view, routine) name or a temporary
-application/connection-specific object; which of those two forms gets generated
-is determined soley by whether OBJECT_NODE's parent is a 'schema' or
-'application'.  For example, passing a 'table' Node under a 'schema' will
-usually return '<schema_name>.<table_name>', or '<schema_name>__<table_name>' if
-the "flatten to single schema" property is true.  When under an 'application'
-Node, the special SQL:2003 prefix "MODULE." is used in place of a schema name. 
-This method is used mostly when referencing an existing schema object, such as
-in a query's FROM clause, or a table's foreign key constraint definition, or a
-trigger's ON declaration.  See SQL:2003 6.6 "<identifier chain>".  If the
-optional boolean argument FOR_DEFN is true, then it will create a (possibly
+This method is like build_identifier_element() except that it will generate
+a "qualified identifier", by following parent Nodes of the given Node, and
+that it is specifically for either a permanent schema object (domain,
+sequence generator, table, view, routine) name or a temporary
+application/connection-specific object; which of those two forms gets
+generated is determined soley by whether OBJECT_NODE's parent is a 'schema'
+or 'application'.  For example, passing a 'table' Node under a 'schema'
+will usually return '<schema_name>.<table_name>', or
+'<schema_name>__<table_name>' if the "flatten to single schema" property is
+true.  When under an 'application' Node, the special SQL:2003 prefix
+"MODULE." is used in place of a schema name. This method is used mostly
+when referencing an existing schema object, such as in a query's FROM
+clause, or a table's foreign key constraint definition, or a trigger's ON
+declaration.  See SQL:2003 6.6 "<identifier chain>".  If the optional
+boolean argument FOR_DEFN is true, then it will create a (possibly
 identical) variant of the object name that is to be used in statements that
-create or drop the same object; this is in case there is a requirement for names
-to be a different format on definition.
+create or drop the same object; this is in case there is a requirement for
+names to be a different format on definition.
 
 =head2 build_identifier_view_src_field( VIEW_SRC_FIELD_NODE )
 
     my $sql = $builder->build_identifier_view_src_field( $view_src_field_node );
 
 This method makes an identifier chain that is used within a query/view
-expression to refer to a source table/view column that we are taking the value
-of.  Assuming that all view sources have local correlation names, the
+expression to refer to a source table/view column that we are taking the
+value of.  Assuming that all view sources have local correlation names, the
 identifier chain will usually look like '<correlation name>.<original
-table/view column name>'.  (As an exception, this method will output just the
-unqualified column name when this object's "unwrap views" property is true, as
-that format works best in WHERE/etc clauses of INSERT|UPDATE|DELETE.)
+table/view column name>'.  (As an exception, this method will output just
+the unqualified column name when this object's "unwrap views" property is
+true, as that format works best in WHERE/etc clauses of
+INSERT|UPDATE|DELETE.)
 
 =head2 build_identifier_temp_table_for_emul( INNER_VIEW_NODE )
 
     my $sql = $builder->build_identifier_temp_table_for_emul( $inner_view_node );
 
-This method makes an identifier for a temporary table that is intended to be
-used by code that is emulating sub-queries and/or compound queries, such that
-the table would hold intermediate values.  See the
-emulated_query_temp_table_join_chars() method documentation for more details on
-what the new identifier name looks like.
+This method makes an identifier for a temporary table that is intended to
+be used by code that is emulating sub-queries and/or compound queries, such
+that the table would hold intermediate values.  See the
+emulated_query_temp_table_join_chars() method documentation for more
+details on what the new identifier name looks like.
 
 =head1 SCALAR EXPRESSION AND PREDICATE SQL CONSTRUCTION METHODS
 
-These "getter" methods build SQL expressions and correspond to the subsections 
-of SQL:2003 Foundation section 6 "Scalar expressions" (p161) and 
-section 8 "Predicates" (p373).
+These "getter" methods build SQL expressions and correspond to the
+subsections of SQL:2003 Foundation section 6 "Scalar expressions" (p161)
+and section 8 "Predicates" (p373).
 
 =head2 build_expr( EXPR_NODE )
 
     my $sql = $builder->build_expr( $expr_node );
 
-This method takes any kind of "expression" Node ("view_expr" or "routine_expr")
-and builds the corresponding SQL fragment.  Sometimes this method is simply a
-wrapper for other build_expr_*() methods, which are called for specific
-'expr_type' values, but other times this method does the work by itself.
+This method takes any kind of "expression" Node ("view_expr" or
+"routine_expr") and builds the corresponding SQL fragment.  Sometimes this
+method is simply a wrapper for other build_expr_*() methods, which are
+called for specific 'expr_type' values, but other times this method does
+the work by itself.
 
 =head2 build_expr_scalar_data_type_defn( SCALAR_DATA_TYPE_NODE )
 
     my $sql = $builder->build_expr_scalar_data_type_defn( $scalar_data_type_node );
 
-This method takes a 'scalar_data_type' SRT Node and builds a corresponding SQL
-fragment such as would be used in the "data type" reference of a table column
-definition.  Example return values are "VARCHAR(40)", "DECIMAL(7,2)", "BOOLEAN"
-"INTEGER UNSIGNED".  Most of the "data type customizations" property elements
-are used to customize this method.  See SQL:2003 6.1 "<data type>" (p161).
+This method takes a 'scalar_data_type' SRT Node and builds a corresponding
+SQL fragment such as would be used in the "data type" reference of a table
+column definition.  Example return values are "VARCHAR(40)",
+"DECIMAL(7,2)", "BOOLEAN" "INTEGER UNSIGNED".  Most of the "data type
+customizations" property elements are used to customize this method.  See
+SQL:2003 6.1 "<data type>" (p161).
 
 =head2 build_expr_row_data_type_defn( ROW_DATA_TYPE_NODE )
 
@@ -2808,21 +2840,22 @@ are used to customize this method.  See SQL:2003 6.1 "<data type>" (p161).
 
 This method takes a 'row_data_type' SRT Node and builds a corresponding SQL
 fragment such as would be used in the "data type" reference of a routine
-variable definition.  See SQL:2003 6.1 "<data type>" (p161) and SQL:2003, 6.2
-"<field definition>" (p173).
+variable definition.  See SQL:2003 6.1 "<data type>" (p161) and SQL:2003,
+6.2 "<field definition>" (p173).
 
 =head2 build_expr_scalar_data_type_or_domain_name( SCALAR_DT_OR_DOM_NODE )
 
     my $data_type_sql = $builder->build_expr_scalar_data_type_or_domain_name( $data_type_node );
     my $domain_sql = $builder->build_expr_scalar_data_type_or_domain_name( $domain_node );
 
-This method takes a 'scalar_data_type' or 'scalar_domain' SRT Node and returns
-one of two kinds of SQL fragments, depending partly on whether or not the
-current database engine supports "domain" schema objects (and we are using
-them).  If it does then this method returns the identifier of the domain schema
-object to refer to, if the argument was a 'scalar_domain' Node; if it does not,
-or the argument is a 'scalar_data_type' Node, then this method instead returns
-the data type definition to use.  See SQL:2003, 11.4 "<column definition>" (p536).
+This method takes a 'scalar_data_type' or 'scalar_domain' SRT Node and
+returns one of two kinds of SQL fragments, depending partly on whether or
+not the current database engine supports "domain" schema objects (and we
+are using them).  If it does then this method returns the identifier of the
+domain schema object to refer to, if the argument was a 'scalar_domain'
+Node; if it does not, or the argument is a 'scalar_data_type' Node, then
+this method instead returns the data type definition to use.  See SQL:2003,
+11.4 "<column definition>" (p536).
 
 =head2 build_expr_row_data_type_or_domain_name( SCALAR_DT_OR_DOM_NODE )
 
@@ -2832,20 +2865,21 @@ the data type definition to use.  See SQL:2003, 11.4 "<column definition>" (p536
 This method takes a 'row_data_type' or 'row_domain' SRT Node and returns
 one of two kinds of SQL fragments, depending partly on whether or not the
 current database engine supports "domain" schema objects (and we are using
-them).  If it does then this method returns the identifier of the domain schema
-object to refer to, if the argument was a 'row_domain' Node; if it does not,
-or the argument is a 'row_data_type' Node, then this method instead returns
-the data type definition to use.  See SQL:2003, 11.4 "<column definition>" (p536).
+them).  If it does then this method returns the identifier of the domain
+schema object to refer to, if the argument was a 'row_domain' Node; if it
+does not, or the argument is a 'row_data_type' Node, then this method
+instead returns the data type definition to use.  See SQL:2003, 11.4
+"<column definition>" (p536).
 
 =head2 build_expr_cast_spec( EXPR_NODE )
 
     my $sql = $builder->build_expr_cast_spec( $expr_node );
 
-This method takes an "*_expr" Node whose 'expr_type' is 'CAST' and generates
-the corresponding "CAST( <operand> AS <target> )" SQL fragment, if the database
-engine supports the syntax; it generates alternative casting expressions
-otherwise, such as Oracle 8's "TO_*(...)" functions.  See SQL:2003, 6.12 "<cast
-specification>" (p201).
+This method takes an "*_expr" Node whose 'expr_type' is 'CAST' and
+generates the corresponding "CAST( <operand> AS <target> )" SQL fragment,
+if the database engine supports the syntax; it generates alternative
+casting expressions otherwise, such as Oracle 8's "TO_*(...)" functions. 
+See SQL:2003, 6.12 "<cast specification>" (p201).
 
 =head2 build_expr_seq_next( SEQUENCE_NODE )
 
@@ -2859,19 +2893,20 @@ See SQL:2003, 6.13 "<next value expression>" (p217).
 
     my $sql = $builder->build_expr_call_sroutine( $expr_node );
 
-This method takes an "*_expr" Node whose 'expr_type' is 'SRTN' and generates
-the corresponding "built-in function" call, which includes basic predicates
-(comparison or assertion), math operations, string operations, logic gates and
-switches, aggregate functions, and olap functions.  Child "*_expr" Nodes
-provide the argument values to give said "built-in function), if there are any.
+This method takes an "*_expr" Node whose 'expr_type' is 'SRTN' and
+generates the corresponding "built-in function" call, which includes basic
+predicates (comparison or assertion), math operations, string operations,
+logic gates and switches, aggregate functions, and olap functions.  Child
+"*_expr" Nodes provide the argument values to give said "built-in
+function), if there are any.
 
 =head2 build_expr_call_uroutine( EXPR_NODE )
 
     my $sql = $builder->build_expr_call_uroutine( $expr_node );
 
-This method takes an "*_expr" Node whose 'expr_type' is 'URTN' and generates a
-call to a named FUNCTION routine schema object.  Child "*_expr" Nodes provide
-the argument values to give said FUNCTION, if there are any.
+This method takes an "*_expr" Node whose 'expr_type' is 'URTN' and
+generates a call to a named FUNCTION routine schema object.  Child "*_expr"
+Nodes provide the argument values to give said FUNCTION, if there are any.
 
 =head1 QUERY EXPRESSION SQL CONSTRUCTION METHODS
 
@@ -2882,31 +2917,32 @@ subsections of SQL:2003 Foundation section 7 "Query expressions" (p293).
 
     my $sql = $builder->build_query_table_expr( $view_node );
 
-This method takes a "view" Node and generates the main body of a query, namely
-the concatenation of these 5 clauses in order: FROM, WHERE, GROUP BY, HAVING,
-and the window clause.  All of these clauses are optional in a query (except
-FROM in most cases); whether or not they are generated is determined by whether
-the given VIEW_NODE comes with definitions for them.  This method is a shim
-that calls 5 separate build_query_*_clause() methods which do the actual work,
-and concatenates the results.  See SQL:2003, 7.4 "<table expression>" (p300).
+This method takes a "view" Node and generates the main body of a query,
+namely the concatenation of these 5 clauses in order: FROM, WHERE, GROUP
+BY, HAVING, and the window clause.  All of these clauses are optional in a
+query (except FROM in most cases); whether or not they are generated is
+determined by whether the given VIEW_NODE comes with definitions for them. 
+This method is a shim that calls 5 separate build_query_*_clause() methods
+which do the actual work, and concatenates the results.  See SQL:2003, 7.4
+"<table expression>" (p300).
 
 =head2 build_query_from_clause( VIEW_NODE )
 
     my $sql = $builder->build_query_from_clause( $view_node );
 
 This method takes a "view" Node and generates the FROM clause in the
-corresponding query, if the query has a FROM clause (most do); it returns the
-empty string otherwise.  The query has a FROM clause if it has at least one
-child "view_src" Node; if it has multiple "view_src", then they are all joined
-together based on this view's child "view_join" Nodes, to form a single "joined
-table".  Each "view_src" can be either a table or view schema object, or a call
-to a named subquery (with optional arguments), or an embedded anonymous
-subquery; it is rendered into SQL, by the build_query_table_factor() method,
-with a unique "correlation name" (expression AS name) that every other part of
-this view's query references it with.  Note that this method should never be
-invoked on "COMPOUND" views.  See SQL:2003, 7.5 "<from clause>" (p301) and
-SQL:2003, 7.6 "<table reference>" (p303) and SQL:2003, 7.7 "<joined table>"
-(p312).
+corresponding query, if the query has a FROM clause (most do); it returns
+the empty string otherwise.  The query has a FROM clause if it has at least
+one child "view_src" Node; if it has multiple "view_src", then they are all
+joined together based on this view's child "view_join" Nodes, to form a
+single "joined table".  Each "view_src" can be either a table or view
+schema object, or a call to a named subquery (with optional arguments), or
+an embedded anonymous subquery; it is rendered into SQL, by the
+build_query_table_factor() method, with a unique "correlation name"
+(expression AS name) that every other part of this view's query references
+it with.  Note that this method should never be invoked on "COMPOUND"
+views.  See SQL:2003, 7.5 "<from clause>" (p301) and SQL:2003, 7.6 "<table
+reference>" (p303) and SQL:2003, 7.7 "<joined table>" (p312).
 
 =head2 build_query_table_factor( VIEW_SRC_NODE )
 
@@ -2946,33 +2982,34 @@ empty string otherwise.  See SQL:2003, 7.10 "<having clause>" (p329).
 
 This method takes a "view" Node and generates the window clause in the
 corresponding query, if the query has a window clause; it returns the empty
-string otherwise.  The window clause includes things like "ORDER BY", "LIMIT",
-"OFFSET".  See SQL:2003, 7.11 "<window clause>" (p331).
+string otherwise.  The window clause includes things like "ORDER BY",
+"LIMIT", "OFFSET".  See SQL:2003, 7.11 "<window clause>" (p331).
 
 =head2 build_query_query_spec( VIEW_NODE[, INTO_DEST_NODE] )
 
     my $sql = $builder->build_query_query_spec( $view_node );
     my $sql2 = $builder->build_query_query_spec( $view_node, $rtn_var_node );
 
-This method takes a "view" Node and generates the main body of a query plus a
-SELECT list.  The output looks like "SELECT <set quantifier> <select list>
-<into clause> <table expression>", where "<set quantifier>" is [DISTINCT|ALL],
-and the other three parts are built respectively by: build_query_select_list(),
-internally, build_query_table_expr().  This method should not be
-called for a COMPOUND view.  The <into clause> is only made if the Node ref
-argument INTO_DEST_NODE is set; that is only intended to happen for root
-SELECT statements inside routines.  See SQL:2003, 7.12 "<query specification>"
-(p341) and SQL:2003, 14.5 "<select statement: single row>" (p824).
+This method takes a "view" Node and generates the main body of a query plus
+a SELECT list.  The output looks like "SELECT <set quantifier> <select
+list> <into clause> <table expression>", where "<set quantifier>" is
+[DISTINCT|ALL], and the other three parts are built respectively by:
+build_query_select_list(), internally, build_query_table_expr().  This
+method should not be called for a COMPOUND view.  The <into clause> is only
+made if the Node ref argument INTO_DEST_NODE is set; that is only intended
+to happen for root SELECT statements inside routines.  See SQL:2003, 7.12
+"<query specification>" (p341) and SQL:2003, 14.5 "<select statement:
+single row>" (p824).
 
 =head2 build_query_select_list( VIEW_NODE )
 
     my $sql = $builder->build_query_select_list( $view_node );
 
-This method takes a "view" Node and generates the "select list" portion of the
-corresponding query, which defines the output columns of the query.  This
-method returns a comma-delimited list expression where each list item is a
-"<derived column> ::= <value expression> AS <column name>".  See SQL:2003, 7.12
-"<query specification>" (p341).
+This method takes a "view" Node and generates the "select list" portion of
+the corresponding query, which defines the output columns of the query. 
+This method returns a comma-delimited list expression where each list item
+is a "<derived column> ::= <value expression> AS <column name>".  See
+SQL:2003, 7.12 "<query specification>" (p341).
 
 =head2 build_query_query_expr( VIEW_NODE )
 
@@ -2988,29 +3025,30 @@ SELECT ...".  See SQL:2003, 7.13 "<query expression>" (p351).
 
     my $sql = $builder->build_query_query_expr_body( $view_node );
 
-This method takes a "view" Node and produces the SQL for a compound query where
-this view's child views are the queries being compounded together, if the
-current view is a COMPOUND view.  If the current view is not a COMPOUND view,
-then this method is simply a shim for build_query_query_spec().  See SQL:2003,
-7.13 "<query expression>" (p351).
+This method takes a "view" Node and produces the SQL for a compound query
+where this view's child views are the queries being compounded together, if
+the current view is a COMPOUND view.  If the current view is not a COMPOUND
+view, then this method is simply a shim for build_query_query_spec().  See
+SQL:2003, 7.13 "<query expression>" (p351).
 
 =head2 build_query_subquery( EXPR_NODE )
 
     my $sql = $builder->build_query_subquery( $expr_node );
 
-This method takes a "view_expr" Node whose 'expr_type' is 'CVIEW' and generates
-either a call to a named subquery, or inlines the definition of an anonymous
-subquery, depending on what the database engine supports (and we are using).
-View schema or table objects are not invoked directly here, but can be
-indirectly via a subquery.  Child "*_expr" Nodes provide the argument values to
-give said subquery, if it takes arguments.  See SQL:2003, 7.15 "<subquery>" (p370).
+This method takes a "view_expr" Node whose 'expr_type' is 'CVIEW' and
+generates either a call to a named subquery, or inlines the definition of
+an anonymous subquery, depending on what the database engine supports (and
+we are using). View schema or table objects are not invoked directly here,
+but can be indirectly via a subquery.  Child "*_expr" Nodes provide the
+argument values to give said subquery, if it takes arguments.  See
+SQL:2003, 7.15 "<subquery>" (p370).
 
 =head1 SCHEMA DEFINITION SQL CONSTRUCTION METHODS
 
 These "getter" methods build SQL strings or fragments thereof that are used
 mainly when declaring or defining (or removing) database schema constructs.
-They correspond to the subsections of SQL:2003 Foundation section 11 "Schema
-definition and manipulation" (p519).
+They correspond to the subsections of SQL:2003 Foundation section 11
+"Schema definition and manipulation" (p519).
 
 =head2 build_schema_create( SCHEMA_NODE )
 
@@ -3024,25 +3062,25 @@ definition>" (p519).
 
     my $sql = $builder->build_schema_delete( $schema_node );
 
-This method takes a 'schema' SRT Node and builds a corresponding "DROP SCHEMA"
-DDL SQL statement, which it returns.  See SQL:2003, 11.2 "<drop schema
-statement>" (p522).
+This method takes a 'schema' SRT Node and builds a corresponding "DROP
+SCHEMA" DDL SQL statement, which it returns.  See SQL:2003, 11.2 "<drop
+schema statement>" (p522).
 
 =head2 build_schema_or_app_scalar_domain_create( DOMAIN_NODE )
 
     my $sql = $builder->build_schema_or_app_scalar_domain_create( $domain_node );
 
-This method takes a 'scalar domain' SRT Node and builds a corresponding "CREATE
-DOMAIN" DDL SQL statement, which it returns.  See SQL:2003, 11.24 "<domain
-definition>" (p603).
+This method takes a 'scalar domain' SRT Node and builds a corresponding
+"CREATE DOMAIN" DDL SQL statement, which it returns.  See SQL:2003, 11.24
+"<domain definition>" (p603).
 
 =head2 build_schema_or_app_scalar_domain_delete( DOMAIN_NODE )
 
     my $sql = $builder->build_schema_or_app_scalar_domain_delete( $domain_node );
 
-This method takes a 'scalar domain' SRT Node and builds a corresponding "DROP DOMAIN"
-DDL SQL statement, which it returns.  See SQL:2003, 11.30 "<drop domain
-statement>" (p610).
+This method takes a 'scalar domain' SRT Node and builds a corresponding
+"DROP DOMAIN" DDL SQL statement, which it returns.  See SQL:2003, 11.30
+"<drop domain statement>" (p610).
 
 =head2 build_schema_or_app_row_domain_create( DOMAIN_NODE )
 
@@ -3056,17 +3094,17 @@ definition>" (p603).
 
     my $sql = $builder->build_schema_or_app_row_domain_delete( $domain_node );
 
-This method takes a 'row domain' SRT Node and builds a corresponding "DROP DOMAIN"
-DDL SQL statement, which it returns.  See SQL:2003, 11.30 "<drop domain
-statement>" (p610).
+This method takes a 'row domain' SRT Node and builds a corresponding "DROP
+DOMAIN" DDL SQL statement, which it returns.  See SQL:2003, 11.30 "<drop
+domain statement>" (p610).
 
 =head2 build_schema_or_app_sequence_create( SEQUENCE_NODE )
 
     my $sql = $builder->build_schema_or_app_sequence_create( $sequence_node );
 
 This method takes a 'sequence' SRT Node and builds a corresponding "CREATE
-SEQUENCE" DDL SQL statement, which it returns.  See SQL:2003, 11.62 "<sequence
-generator definition>" (p726).
+SEQUENCE" DDL SQL statement, which it returns.  See SQL:2003, 11.62
+"<sequence generator definition>" (p726).
 
 =head2 build_schema_or_app_sequence_delete( SEQUENCE_NODE )
 
@@ -3080,80 +3118,80 @@ sequence generator statement>" (p729).
 
     my $sql = $builder->build_schema_or_app_table_create( $table_node );
 
-This method takes a 'table' SRT Node and builds a corresponding "CREATE TABLE"
-DDL SQL statement, which it returns.  See SQL:2003, 6.2 "<field definition>"
-(p173) and SQL:2003, 11.3 "<table definition>" (p525) and SQL:2003, 11.4
-"<column definition>" (p536) and SQL:2003, 11.5 "<default clause>" (p541) and
-SQL:2003, 11.6 "<table constraint definition>" (p545) and SQL:2003, 11.7
-"<unique constraint definition>" (p547) and SQL:2003, 11.8 "<referential
-constraint definition>" (p549) and SQL:2003, 11.9 "<check constraint
-definition>" (p569).
+This method takes a 'table' SRT Node and builds a corresponding "CREATE
+TABLE" DDL SQL statement, which it returns.  See SQL:2003, 6.2 "<field
+definition>" (p173) and SQL:2003, 11.3 "<table definition>" (p525) and
+SQL:2003, 11.4 "<column definition>" (p536) and SQL:2003, 11.5 "<default
+clause>" (p541) and SQL:2003, 11.6 "<table constraint definition>" (p545)
+and SQL:2003, 11.7 "<unique constraint definition>" (p547) and SQL:2003,
+11.8 "<referential constraint definition>" (p549) and SQL:2003, 11.9
+"<check constraint definition>" (p569).
 
 =head2 build_schema_or_app_table_delete( TABLE_NODE )
 
     my $sql = $builder->build_schema_or_app_table_delete( $table_node );
 
-This method takes a 'table' SRT Node and builds a corresponding "DROP TABLE"
-DDL SQL statement, which it returns.  See SQL:2003, 11.21 "<drop table
-statement>" (p587).
+This method takes a 'table' SRT Node and builds a corresponding "DROP
+TABLE" DDL SQL statement, which it returns.  See SQL:2003, 11.21 "<drop
+table statement>" (p587).
 
 =head2 build_schema_or_app_view_create( VIEW_NODE )
 
     my $sql = $builder->build_schema_or_app_view_create( $view_node );
 
-This method takes a 'view' SRT Node and builds a corresponding "CREATE VIEW"
-DDL SQL statement, which it returns.  See SQL:2003, 11.22 "<view definition>"
-(p590).
+This method takes a 'view' SRT Node and builds a corresponding "CREATE
+VIEW" DDL SQL statement, which it returns.  See SQL:2003, 11.22 "<view
+definition>" (p590).
 
 =head2 build_schema_or_app_view_delete( VIEW_NODE )
 
     my $sql = $builder->build_schema_or_app_view_delete( $view_node );
 
-This method takes a 'view' SRT Node and builds a corresponding "DROP VIEW" DDL
-SQL statement, which it returns.  See SQL:2003, 11.23 "<drop view statement>"
-(p600).
+This method takes a 'view' SRT Node and builds a corresponding "DROP VIEW"
+DDL SQL statement, which it returns.  See SQL:2003, 11.23 "<drop view
+statement>" (p600).
 
 =head2 build_schema_or_app_routine_create( ROUTINE_NODE )
 
     my $sql = $builder->build_schema_or_app_routine_create( $routine_node );
 
 This method takes a 'routine' SRT Node and builds a corresponding "CREATE
-ROUTINE/PROCEDURE/FUNCTION" DDL SQL statement, which it returns.  See SQL:2003,
-11.39 "<trigger definition>" (p629) and SQL:2003, 11.50 "<SQL-invoked routine>"
-(p675).
+ROUTINE/PROCEDURE/FUNCTION" DDL SQL statement, which it returns.  See
+SQL:2003, 11.39 "<trigger definition>" (p629) and SQL:2003, 11.50
+"<SQL-invoked routine>" (p675).
 
 =head2 build_schema_or_app_routine_delete( ROUTINE_NODE )
 
     my $sql = $builder->build_schema_or_app_routine_delete( $routine_node );
 
 This method takes a 'routine' SRT Node and builds a corresponding "DROP
-ROUTINE/PROCEDURE/FUNCTION" DDL SQL statement, which it returns.  See SQL:2003,
-11.40 "<drop trigger statement>" (p633) and SQL:2003, 11.52 "<drop routine
-statement>" (p703).
+ROUTINE/PROCEDURE/FUNCTION" DDL SQL statement, which it returns.  See
+SQL:2003, 11.40 "<drop trigger statement>" (p633) and SQL:2003, 11.52
+"<drop routine statement>" (p703).
 
 =head1 ACCESS CONTROL SQL CONSTRUCTION METHODS
 
-These "getter" methods build SQL statements that are used mainly when declaring
-users or roles and their permissions.  They correspond to the subsections of
-SQL:2003 Foundation section 12 "Access control" (p731).  Note that
-SQL::Routine assigns privileges to roles, and roles to users; privileges
-are not assigned to users directly.
+These "getter" methods build SQL statements that are used mainly when
+declaring users or roles and their permissions.  They correspond to the
+subsections of SQL:2003 Foundation section 12 "Access control" (p731). 
+Note that SQL::Routine assigns privileges to roles, and roles to users;
+privileges are not assigned to users directly.
 
 =head2 build_access_role_create( ROLE_NODE )
 
     my $sql = $builder->build_access_role_create( $role_node );
 
-This method takes a 'role' SRT Node and builds a corresponding "CREATE ROLE"
-SQL statement, which it returns.  See SQL:2003, 12.4 "<role definition>"
-(p743).
+This method takes a 'role' SRT Node and builds a corresponding "CREATE
+ROLE" SQL statement, which it returns.  See SQL:2003, 12.4 "<role
+definition>" (p743).
 
 =head2 build_access_role_delete( ROLE_NODE )
 
     my $sql = $builder->build_access_role_delete( $role_node );
 
-This method takes a 'role' SRT Node and builds a corresponding "DROP ROLE" SQL
-statement, which it returns.  See SQL:2003, 12.6 "<drop role statement>"
-(p746).
+This method takes a 'role' SRT Node and builds a corresponding "DROP ROLE"
+SQL statement, which it returns.  See SQL:2003, 12.6 "<drop role
+statement>" (p746).
 
 =head2 build_access_grant( GRANTEE_NODE )
 
@@ -3161,13 +3199,13 @@ statement, which it returns.  See SQL:2003, 12.6 "<drop role statement>"
 
 This method takes a "grantee" ("role" or "user") Node and builds a list of
 "GRANT ... TO ..." SQL statements, which it returns as a string.  If the
-grantee is a 'role', then grant statements for all of the privileges assigned
-to that role are created.  If the grantee is a 'user', then grant statements
-for all the roles assigned to that user are created.  This method returns an
-empty string if the grantee has no privileges or roles.  See SQL:2003, 12.1
-"<grant statement>" (p731) and SQL:2003, 12.2 "<grant privilege statement>"
-(p736) and SQL:2003, 12.3 "<privileges>" (p739) and SQL:2003, 12.5 "<grant role
-statement>" (p744).
+grantee is a 'role', then grant statements for all of the privileges
+assigned to that role are created.  If the grantee is a 'user', then grant
+statements for all the roles assigned to that user are created.  This
+method returns an empty string if the grantee has no privileges or roles. 
+See SQL:2003, 12.1 "<grant statement>" (p731) and SQL:2003, 12.2 "<grant
+privilege statement>" (p736) and SQL:2003, 12.3 "<privileges>" (p739) and
+SQL:2003, 12.5 "<grant role statement>" (p744).
 
 =head2 build_access_revoke( GRANTEE_NODE )
 
@@ -3175,41 +3213,44 @@ statement>" (p744).
 
 This method takes a "grantee" ("role" or "user") Node and builds a list of
 "REVOKE ... FROM ..." SQL statements, which it returns as a string.  If the
-grantee is a 'role', then revoke statements for all of the privileges assigned
-to that role are created.  If the grantee is a 'user', then revoke statements
-for all the roles assigned to that user are created.  This method returns an
-empty string if the grantee has no privileges or roles.  See SQL:2003, 12.7
-"<revoke statement>" (p747) and SQL:2003, 12.3 "<privileges>" (p739).
+grantee is a 'role', then revoke statements for all of the privileges
+assigned to that role are created.  If the grantee is a 'user', then revoke
+statements for all the roles assigned to that user are created.  This
+method returns an empty string if the grantee has no privileges or roles. 
+See SQL:2003, 12.7 "<revoke statement>" (p747) and SQL:2003, 12.3
+"<privileges>" (p739).
 
 =head1 DATA MANIPULATION SQL CONSTRUCTION METHODS
 
-These "getter" methods build SQL statements that are used mainly with cursors
-or routine statements, or when manipulating data, such as insert/update/delete
-commands. They correspond to the subsections of SQL:2003 Foundation sections:
-14 "Data manipulation" (p809), 15 "Control statements", plus part of
-"SQL-client modules" (p765).
+These "getter" methods build SQL statements that are used mainly with
+cursors or routine statements, or when manipulating data, such as
+insert/update/delete commands. They correspond to the subsections of
+SQL:2003 Foundation sections: 14 "Data manipulation" (p809), 15 "Control
+statements", plus part of "SQL-client modules" (p765).
 
 =head2 build_dmanip_routine_args( ROUTINE_NODE )
 
     my $sql = $builder->build_dmanip_routine_args( $routine_node );
 
 This method takes a 'routine' SRT Node and constructs the argument list
-declaration for it, returning that as a string (or the empty string if there are
-no arguments).  The string includes bounding parenthesis.  See SQL:2003, 11.50
-"<SQL-invoked routine>" (p675), particularly "<SQL parameter declaration list>".
+declaration for it, returning that as a string (or the empty string if
+there are no arguments).  The string includes bounding parenthesis.  See
+SQL:2003, 11.50 "<SQL-invoked routine>" (p675), particularly "<SQL
+parameter declaration list>".
 
 =head2 build_dmanip_routine_body( ROUTINE_NODE[, IS_ATOMIC] )
 
     my $sql = $builder->build_dmanip_routine_body( $routine_node, 1 );
 
-This method takes a 'routine' SRT Node and constructs the main body SQL of that
-routine, which is the BEGIN...END compound statement, all the contained routine
-statements, and the variable declarations; these are all returned as a string.
-This method does not construct a method name or argument list.  It is suitable
-for both named/stored routines and anonymous/application routines.  If the
-optional boolean argument IS_ATOMIC is true, then "BEGIN ATOMIC" is generated
-instead of "BEGIN"; it is used for trigger bodies.  See SQL:2003, 14.1
-"<declare cursor>" (p809) plus other relevant sections of SQL:2003.
+This method takes a 'routine' SRT Node and constructs the main body SQL of
+that routine, which is the BEGIN...END compound statement, all the
+contained routine statements, and the variable declarations; these are all
+returned as a string. This method does not construct a method name or
+argument list.  It is suitable for both named/stored routines and
+anonymous/application routines.  If the optional boolean argument IS_ATOMIC
+is true, then "BEGIN ATOMIC" is generated instead of "BEGIN"; it is used
+for trigger bodies.  See SQL:2003, 14.1 "<declare cursor>" (p809) plus
+other relevant sections of SQL:2003.
 
 =head2 build_dmanip_routine_stmt( STMT_NODE )
 
@@ -3217,63 +3258,67 @@ instead of "BEGIN"; it is used for trigger bodies.  See SQL:2003, 14.1
 
 This method takes a "routine_stmt" Node and builds the corresponding SQL
 statement.  Sometimes this method is simply a wrapper for other
-build_dmanip_*() methods, which are called for specific 'stmt_type' values, but
-other times this method does the work by itself.  See SQL:2003, 13.5 "<SQL
-procedure statement>" (p790) and SQL:2003, 15.2 "<return statement>" (p886).
+build_dmanip_*() methods, which are called for specific 'stmt_type' values,
+but other times this method does the work by itself.  See SQL:2003, 13.5
+"<SQL procedure statement>" (p790) and SQL:2003, 15.2 "<return statement>"
+(p886).
 
 =head2 build_dmanip_call_sroutine( STMT_NODE )
 
     my $sql = $builder->build_dmanip_call_sroutine( $stmt_node );
 
 This method takes a "routine_stmt" Node whose 'stmt_type' is 'SRTN' and
-generates the corresponding "built-in procedure" call, which includes creation
-and use of cursors, selects, inserts, updates, deletes, commit, rollback, etc. 
-Child "*_expr" Nodes provide the argument values to give said "built-in
-function), if there are any.  See SQL:2003, 14.2 "<open statement>" (p815) and
-SQL:2003, 14.3 "<fetch statement>" (p817) and SQL:2003, 14.4 "<close
-statement>" (p822).
+generates the corresponding "built-in procedure" call, which includes
+creation and use of cursors, selects, inserts, updates, deletes, commit,
+rollback, etc. Child "*_expr" Nodes provide the argument values to give
+said "built-in function), if there are any.  See SQL:2003, 14.2 "<open
+statement>" (p815) and SQL:2003, 14.3 "<fetch statement>" (p817) and
+SQL:2003, 14.4 "<close statement>" (p822).
 
 =head2 build_dmanip_src_schema_object_name( VIEW_NODE )
 
     my $sql = $builder->build_dmanip_src_schema_object_name( $view_node );
 
-This method takes a "view" Node and returns the schema-qualified name of its
-single source, if it has a single source and that is a schema object (table or
-a named view); it returns the undefined value otherwise.  This function is used
-by the methods which generate INSERT|UPDATE|DELETE statements.
+This method takes a "view" Node and returns the schema-qualified name of
+its single source, if it has a single source and that is a schema object
+(table or a named view); it returns the undefined value otherwise.  This
+function is used by the methods which generate INSERT|UPDATE|DELETE
+statements.
 
 =head2 build_dmanip_insert_stmt( VIEW_NODE )
 
     my $sql = $builder->build_dmanip_insert_stmt( $view_node );
 
 This method takes a "view" Node and returns the corresponding INSERT SQL
-statement, assuming the view has details for one.  See SQL:2003, 7.3 "<table
-value constructor>" (p298) and SQL:2003, 14.8 "<insert statement>" (p834).
+statement, assuming the view has details for one.  See SQL:2003, 7.3
+"<table value constructor>" (p298) and SQL:2003, 14.8 "<insert statement>"
+(p834).
 
 =head2 build_dmanip_update_stmt( VIEW_NODE )
 
     my $sql = $builder->build_dmanip_update_stmt( $view_node );
 
 This method takes a "view" Node and returns the corresponding UPDATE SQL
-statement, assuming the view has details for one.  See SQL:2003, 14.11 "<update
-statement: searched>" (p849) and SQL:2003, 14.12 "<set clause list>" (p853).
+statement, assuming the view has details for one.  See SQL:2003, 14.11
+"<update statement: searched>" (p849) and SQL:2003, 14.12 "<set clause
+list>" (p853).
 
 =head2 build_dmanip_delete_stmt( VIEW_NODE )
 
     my $sql = $builder->build_dmanip_delete_stmt( $view_node );
 
 This method takes a "view" Node and returns the corresponding DELETE SQL
-statement, assuming the view has details for one.  See SQL:2003, 14.7 "<delete
-statement: searched>" (p831).
+statement, assuming the view has details for one.  See SQL:2003, 14.7
+"<delete statement: searched>" (p831).
 
 =head2 build_dmanip_call_uroutine( STMT_NODE )
 
     my $sql = $builder->build_dmanip_call_uroutine( $stmt_node );
 
 This method takes a "routine_stmt" Node whose 'stmt_type' is 'URTN' and
-generates a call to a named PROCEDURE routine schema object.  Child "*_expr"
-Nodes provide the argument values to give said PROCEDURE, if there are any. 
-See SQL:2003, 15.1 "<call statement>" (p885).
+generates a call to a named PROCEDURE routine schema object.  Child
+"*_expr" Nodes provide the argument values to give said PROCEDURE, if there
+are any. See SQL:2003, 15.1 "<call statement>" (p885).
 
 =head1 UTILITY METHODS
 
@@ -3282,20 +3327,21 @@ See SQL:2003, 15.1 "<call statement>" (p885).
     my $result = $builder->substitute_macros( 'NUMBER({p},{s})', { 'p' => 7, 's' => 2 } )
 
 This method takes a string in STR which contains brace-delimited tokens and
-returns a version of that string having the tokens replaced by corresponding
-values provided in the hash ref SUBS.  This method is used mainly by
-build_expr_scalar_data_type_defn() at the moment.
+returns a version of that string having the tokens replaced by
+corresponding values provided in the hash ref SUBS.  This method is used
+mainly by build_expr_scalar_data_type_defn() at the moment.
 
 =head2 find_scalar_domain_for_row_domain_field( SCALAR_DT_NODE, ROW_DOM_NODE )
 
-This method takes a 'scalar_data_type' SRT Node in SCALAR_DT_NODE and tries to
-find a 'scalar_domain' schema object that corresponds to it; the method returns
-the 'scalar_domain' Node if one is found; otherwise, it returns the original
-'scalar_data_type' Node.  The ROW_DOM_NODE argument, a 'row_domain' SRT Node,
-is used to determine where to search; this method currently only searches for
-'scalar_domain' Nodes that have the same primary-parent Node as the
-'row_domain' Node, meaning they are declared in the same context.  This method
-is used mainly by build_schema_or_app_table_create() at the moment.
+This method takes a 'scalar_data_type' SRT Node in SCALAR_DT_NODE and tries
+to find a 'scalar_domain' schema object that corresponds to it; the method
+returns the 'scalar_domain' Node if one is found; otherwise, it returns the
+original 'scalar_data_type' Node.  The ROW_DOM_NODE argument, a
+'row_domain' SRT Node, is used to determine where to search; this method
+currently only searches for 'scalar_domain' Nodes that have the same
+primary-parent Node as the 'row_domain' Node, meaning they are declared in
+the same context.  This method is used mainly by
+build_schema_or_app_table_create() at the moment.
 
 =head1 DEPENDENCIES
 
@@ -3322,7 +3368,8 @@ L<Rosetta::Emulator::DBI>.
 =head1 BUGS AND LIMITATIONS
 
 This module is currently in pre-alpha development status, meaning that some
-parts of it will be changed in the near future, perhaps in incompatible ways.
+parts of it will be changed in the near future, perhaps in incompatible
+ways.
 
 =head1 AUTHOR
 
@@ -3330,47 +3377,50 @@ Darren R. Duncan (C<perl@DarrenDuncan.net>)
 
 =head1 LICENCE AND COPYRIGHT
 
-This file is part of the SQL::Routine::SQLBuilder reference implementation of a
-SQL:2003 string builder that uses the SQL::Routine database portability library.
+This file is part of the SQL::Routine::SQLBuilder reference implementation
+of a SQL:2003 string builder that uses the SQL::Routine database
+portability library.
 
 SQL::Routine::SQLBuilder is Copyright (c) 2002-2005, Darren R. Duncan.  All
 rights reserved.  Address comments, suggestions, and bug reports to
 C<perl@DarrenDuncan.net>, or visit L<http://www.DarrenDuncan.net/> for more
 information.
 
-SQL::Routine::SQLBuilder is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License (GPL) as published by the
-Free Software Foundation (L<http://www.fsf.org/>); either version 2 of the License,
-or (at your option) any later version.  You should have received a copy of the
-GPL as part of the SQL::Routine::SQLBuilder distribution, in the file named
-"GPL"; if not, write to the Free Software Foundation, Inc., 51 Franklin St,
-Fifth Floor, Boston, MA  02110-1301, USA.
+SQL::Routine::SQLBuilder is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License (GPL) as
+published by the Free Software Foundation (L<http://www.fsf.org/>); either
+version 2 of the License, or (at your option) any later version.  You
+should have received a copy of the GPL as part of the
+SQL::Routine::SQLBuilder distribution, in the file named "GPL"; if not,
+write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+Boston, MA  02110-1301, USA.
 
-Linking SQL::Routine::SQLBuilder statically or dynamically with other modules is
-making a combined work based on SQL::Routine::SQLBuilder.  Thus, the terms and
-conditions of the GPL cover the whole combination.  As a special exception, the
-copyright holders of SQL::Routine::SQLBuilder give you permission to link
-SQL::Routine::SQLBuilder with independent modules, regardless of the license
-terms of these independent modules, and to copy and distribute the resulting
-combined work under terms of your choice, provided that every copy of the
-combined work is accompanied by a complete copy of the source code of
-SQL::Routine::SQLBuilder (the version of SQL::Routine::SQLBuilder used to
-produce the combined work), being distributed under the terms of the GPL plus
-this exception.  An independent module is a module which is not derived from or
-based on SQL::Routine::SQLBuilder, and which is fully useable when not linked to
+Linking SQL::Routine::SQLBuilder statically or dynamically with other
+modules is making a combined work based on SQL::Routine::SQLBuilder.  Thus,
+the terms and conditions of the GPL cover the whole combination.  As a
+special exception, the copyright holders of SQL::Routine::SQLBuilder give
+you permission to link SQL::Routine::SQLBuilder with independent modules,
+regardless of the license terms of these independent modules, and to copy
+and distribute the resulting combined work under terms of your choice,
+provided that every copy of the combined work is accompanied by a complete
+copy of the source code of SQL::Routine::SQLBuilder (the version of
+SQL::Routine::SQLBuilder used to produce the combined work), being
+distributed under the terms of the GPL plus this exception.  An independent
+module is a module which is not derived from or based on
+SQL::Routine::SQLBuilder, and which is fully useable when not linked to
 SQL::Routine::SQLBuilder in any form.
 
-Any versions of SQL::Routine::SQLBuilder that you modify and distribute must
-carry prominent notices stating that you changed the files and the date of any
-changes, in addition to preserving this original copyright notice and other
-credits.  SQL::Routine::SQLBuilder is distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Any versions of SQL::Routine::SQLBuilder that you modify and distribute
+must carry prominent notices stating that you changed the files and the
+date of any changes, in addition to preserving this original copyright
+notice and other credits.  SQL::Routine::SQLBuilder is distributed in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 While it is by no means required, the copyright holders of
-SQL::Routine::SQLBuilder would appreciate being informed any time you create a
-modified version of SQL::Routine::SQLBuilder that you are willing to distribute,
-because that is a practical way of suggesting improvements to the standard
-version.
+SQL::Routine::SQLBuilder would appreciate being informed any time you
+create a modified version of SQL::Routine::SQLBuilder that you are willing
+to distribute, because that is a practical way of suggesting improvements
+to the standard version.
 
 =cut

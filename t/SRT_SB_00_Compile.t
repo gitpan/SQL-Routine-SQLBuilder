@@ -7,10 +7,10 @@ use version;
 plan( 'tests' => 9 );
 
 use_ok( 'SQL::Routine::SQLBuilder' );
-is( $SQL::Routine::SQLBuilder::VERSION, qv('0.21.0'), "SQL::Routine::SQLBuilder is the correct version" );
+is( $SQL::Routine::SQLBuilder::VERSION, qv('0.21.1'), "SQL::Routine::SQLBuilder is the correct version" );
 
 use_ok( 'SQL::Routine::SQLBuilder::L::en' );
-is( $SQL::Routine::SQLBuilder::L::en::VERSION, qv('0.2.0'), "SQL::Routine::SQLBuilder::L::en is the correct version" );
+is( $SQL::Routine::SQLBuilder::L::en::VERSION, qv('0.2.1'), "SQL::Routine::SQLBuilder::L::en is the correct version" );
 
 use lib 't/lib';
 
