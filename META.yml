@@ -1,10 +1,11 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         SQL-Routine-SQLBuilder
-version:      v0.21.1
+version:      v0.21.2
 version_from: lib/SQL/Routine/SQLBuilder.pm
 installdirs:  site
 requires:
+    List::MoreUtils:               0.12
     Locale::KeyedText:             1.6.0
     only:                          0
     SQL::Routine:                  0.70.0

@@ -2,36 +2,38 @@
 use 5.008001; use utf8; use strict; use warnings;
 
 package SQL::Routine::SQLBuilder::L::en;
-use version; our $VERSION = qv('0.2.1');
-
-######################################################################
-
-=cut
+use version; our $VERSION = qv('0.2.2');
 
 ######################################################################
 
 my $CSB = 'SQL::Routine::SQLBuilder';
 
 my %text_strings = (
-    'SRT_SB_METH_ARG_UNDEF' => 
-        $CSB.'.{METH}(): undefined (or missing) {ARGNM} argument',
-    'SRT_SB_METH_ARG_NO_ARY' => 
-        $CSB.'.{METH}(): invalid {ARGNM} argument; '.
-        'it is not a Array ref, but rather is "{ARGVL}"',
-    'SRT_SB_METH_ARG_NO_HASH' => 
-        $CSB.'.{METH}(): invalid {ARGNM} argument; '.
-        'it is not a Hash ref, but rather is "{ARGVL}"',
-    'SRT_SB_METH_ARG_NO_NODE' => 
-        $CSB.'.{METH}(): invalid {ARGNM} argument; '.
-        'it is not a Node object, but rather is "{ARGVL}"',
+    'SRT_SB_METH_ARG_UNDEF' =>
+        $CSB . q[.{METH}(): ]
+        . q[undefined (or missing) {ARGNM} argument],
+    'SRT_SB_METH_ARG_NO_ARY' =>
+        $CSB . q[.{METH}(): ]
+        . q[invalid {ARGNM} argument; ]
+        . q[it is not a Array ref, but rather is "{ARGVL}"],
+    'SRT_SB_METH_ARG_NO_HASH' =>
+        $CSB . q[.{METH}(): ]
+        . q[invalid {ARGNM} argument; ]
+        . q[it is not a Hash ref, but rather is "{ARGVL}"],
+    'SRT_SB_METH_ARG_NO_NODE' =>
+        $CSB . q[.{METH}(): ]
+        . q[invalid {ARGNM} argument; ]
+        . q[it is not a Node object, but rather is "{ARGVL}"],
 
-    'SRT_SB_METH_ARG_WRONG_NODE_TYPE' => 
-        $CSB.'.{METH}(): invalid {ARGNM} argument; '.
-        'it is not a "{EXPNTYPE}" Node, but rather is a "{ARGNTYPE}" Node',
+    'SRT_SB_METH_ARG_WRONG_NODE_TYPE' =>
+        $CSB . q[.{METH}(): ]
+        . q[invalid {ARGNM} argument; ]
+        . q[it is not a "{EXPNTYPE}" Node, but rather is a "{ARGNTYPE}" Node],
 
-    'SRT_SB_IDENT_STYLE_ARG_INVAL' => 
-        $CSB.'.identifier_style(): invalid NEW_VALUE argument; '.
-        'it is not one of "{EXPVLS}", but rather is "{ARGVL}"',
+    'SRT_SB_IDENT_STYLE_ARG_INVAL' =>
+        $CSB . q[.identifier_style(): ]
+        . q[invalid NEW_VALUE argument; ]
+        . q[it is not one of "{EXPVLS}", but rather is "{ARGVL}"],
 );
 
 ######################################################################
@@ -54,7 +56,7 @@ SQL::Routine::SQLBuilder::L::en - Localization of SQL::Routine::SQLBuilder for E
 
 =head1 VERSION
 
-This document describes SQL::Routine::SQLBuilder::L::en version 0.2.1.
+This document describes SQL::Routine::SQLBuilder::L::en version 0.2.2.
 
 =head1 SYNOPSIS
 
@@ -63,7 +65,7 @@ This document describes SQL::Routine::SQLBuilder::L::en version 0.2.1.
 
     # do work ...
 
-    my $translator = Locale::KeyedText->new_translator( 
+    my $translator = Locale::KeyedText->new_translator(
         ['SQL::Routine::SQLBuilder::L::', 'SQL::Routine::L::'], ['en'] );
 
     # do work ...
@@ -71,7 +73,7 @@ This document describes SQL::Routine::SQLBuilder::L::en version 0.2.1.
     eval {
         # do work with SQL::Routine::SQLBuilder, which may throw an exception ...
     };
-    if( my $error_message_object = $@ ) {
+    if (my $error_message_object = $@) {
         # examine object here if you want and programmatically recover...
 
         # or otherwise do the next few lines...

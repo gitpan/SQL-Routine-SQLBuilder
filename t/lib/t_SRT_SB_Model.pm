@@ -47,10 +47,10 @@ sub populate_model {
         [ 'table_field', { 'si_row_field' => 'person_id', 'mandatory' => 1, 'default_val' => 1, 'auto_inc' => 1, }, ],
         [ 'table_field', { 'si_row_field' => 'name'     , 'mandatory' => 1, }, ],
         [ 'table_index', { 'si_name' => 'primary' , 'index_type' => 'UNIQUE', }, [
-            [ 'table_index_field', 'person_id', ], 
+            [ 'table_index_field', 'person_id', ],
         ], ],
         [ 'table_index', { 'si_name' => 'ak_alternate_id', 'index_type' => 'UNIQUE', }, [
-            [ 'table_index_field', 'alternate_id', ], 
+            [ 'table_index_field', 'alternate_id', ],
         ], ],
         [ 'table_index', { 'si_name' => 'fk_father', 'index_type' => 'FOREIGN', 'f_table' => 'person', }, [
             [ 'table_index_field', { 'si_field' => 'father_id', 'f_field' => 'person_id' } ],
@@ -60,7 +60,7 @@ sub populate_model {
         ], ],
     ] );
 
-    my $vw_pwp = $schema->build_child_node_tree( 'view', { 'si_name' => 'person_with_parents', 
+    my $vw_pwp = $schema->build_child_node_tree( 'view', { 'si_name' => 'person_with_parents',
             'view_type' => 'JOINED', 'row_data_type' => 'person_with_parents', }, [
         ( map { [ 'view_src', { 'si_name' => $_, 'match' => 'person', }, [
             map { [ 'view_src_field', $_, ], } ( 'person_id', 'name', 'father_id', 'mother_id', ),
